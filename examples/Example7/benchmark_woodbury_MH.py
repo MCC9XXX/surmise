@@ -2,7 +2,7 @@
 import numpy as np
 from random import sample
 import scipy.stats as sps
-from ml_methods import fit_RandomForest
+from ml_methods import fit_logisticRegression
 from surmise.emulation import emulator
 from surmise.calibration import calibrator
 from visualization_tools import boxplot_param
@@ -17,7 +17,7 @@ param_values = np.loadtxt('param_values.csv', delimiter=',')
 func_eval = np.loadtxt('func_eval.csv', delimiter=',')
 
 # Get the random sample of 100
-rndsample = sample(range(0, 1000), 500)
+rndsample = sample(range(0, 3000), 3000)
 func_eval_rnd = func_eval[rndsample, :]
 param_values_rnd = param_values[rndsample, :]
 
@@ -56,73 +56,56 @@ emulator_f_PCGPwM = emulator(x=x,
                              f=(func_eval_in)**(0.5),
                              method='PCGPwM')
 
-def score_func(x, y, alpha, cal):
-    # computes interval score
-    alpha = 0.05
-    z = sps.norm.ppf(1 - alpha/2)
-    pr = cal.predict(x)
-    mean_pre = pr.mean() # prediction mean of the average of 1000 random thetas at x
-    var_pre = pr.var()  # variance of the mean of 1000 random thetas at x
-    lower_bound = mean_pre - z*np.sqrt(var_pre)
-    upper_bound = mean_pre + z*np.sqrt(var_pre)
-
-    int_score = -(upper_bound - lower_bound) \
-        - (2/alpha)*np.maximum(np.zeros(len(y)), lower_bound - y) \
-            -np.maximum(np.zeros(len(y)), y - upper_bound)
-    return(np.mean(int_score))
-
-def score_func_emuvar(x, y, alpha, cal, emu):
-    alpha = 0.05
-    z = sps.norm.ppf(1 - alpha/2)
-    cal_theta = cal.theta.rnd(500)
-    pre = emu.predict(x=x, theta=cal_theta)
-    pre_mean = pre.mean()
-    mean_pi = pre_mean.mean(axis=1)
-    pre_var = pre.var()
-    var_pi = pre_var.mean(axis=1)
-    lower_bound = mean_pi - z*np.sqrt(var_pi)
-    upper_bound = mean_pi + z*np.sqrt(var_pi)
-    
-    int_score = -(upper_bound - lower_bound) \
-        - (2/alpha)*np.maximum(np.zeros(len(y)), lower_bound - y) \
-            -np.maximum(np.zeros(len(y)), y - upper_bound)
-    return(np.mean(int_score))
-    
 # Define a class for prior of 10 parameters
+
+# class prior_covid:
+#     """ This defines the class instance of priors provided to the method. """
+#     #sps.uniform.logpdf(theta[:, 0], 3, 4.5)
+#     def lpdf(theta):
+#         return (sps.beta.logpdf((theta[:, 0]-1.9)/2, 2, 2) +
+#                 sps.beta.logpdf((theta[:, 1]-0.1)/4.9, 2, 2) +
+#                 sps.beta.logpdf((theta[:, 2]-3)/2, 2, 2) +
+#                 sps.beta.logpdf((theta[:, 3]-3)/2, 2, 2)).reshape((len(theta), 1))
+#     def rnd(n):
+#         return np.vstack((1.9+2*sps.beta.rvs(2, 2, size=n),
+#                           0.1+4.9*sps.beta.rvs(2, 2, size=n),
+#                           3+2*sps.beta.rvs(2, 2, size=n),
+#                           3+2*sps.beta.rvs(2, 2, size=n))).T
+
 
 class prior_covid:
     """ This defines the class instance of priors provided to the method. """
     #sps.uniform.logpdf(theta[:, 0], 3, 4.5)
     def lpdf(theta):
-        return (sps.beta.logpdf((theta[:, 0]-1.9)/2, 2, 2) +
+        return (sps.beta.logpdf((theta[:, 0]-1)/4, 2, 2) +
                 sps.beta.logpdf((theta[:, 1]-0.1)/4.9, 2, 2) +
-                sps.beta.logpdf((theta[:, 2]-3)/2, 2, 2) +
-                sps.beta.logpdf((theta[:, 3]-3)/2, 2, 2)).reshape((len(theta), 1))
+                sps.beta.logpdf((theta[:, 2]-1)/6, 2, 2) +
+                sps.beta.logpdf((theta[:, 3]-1)/6, 2, 2)).reshape((len(theta), 1))
     def rnd(n):
-        return np.vstack((1.9+2*sps.beta.rvs(2, 2, size=n),
+        return np.vstack((1+4*sps.beta.rvs(2, 2, size=n),
                           0.1+4.9*sps.beta.rvs(2, 2, size=n),
-                          3+2*sps.beta.rvs(2, 2, size=n),
-                          3+2*sps.beta.rvs(2, 2, size=n))).T
+                          1+6*sps.beta.rvs(2, 2, size=n),
+                          1+6*sps.beta.rvs(2, 2, size=n))).T
     
 # Fit a classification model
-classification_model = fit_RandomForest(func_eval, param_values, T0, T1)
+classification_model = fit_logisticRegression(func_eval, param_values, T0, T1)
 
 # Run calibration with 5 random initial starting points
 obsvar = np.maximum(0.01*np.sqrt(real_data_tr), 1)
 
 no_rep = 10
-score_matrix = np.zeros((no_rep, 2))
-score_matrix2 = np.zeros((no_rep, 2))
 
 for i in range(no_rep):
     initial = prior_covid.rnd(1)  
+    #breakpoint()
     cal_f_ml = calibrator(emu = emulator_f_PCGPwM,
                           y = np.sqrt(real_data_tr),
                           x = xtr,
                           thetaprior = prior_covid,
-                          method = 'mlbayes',
+                          method = 'mlbayeswoodbury',
                           yvar = obsvar,
-                          args = {'clf_method': classification_model, 
+                          args = {'sampler': 'metropolis_hastings',
+                                  'clf_method': classification_model, 
                                   'theta0': initial, 
                                   'numsamp' : 500, 
                                   'stepType' : 'normal', 
@@ -132,18 +115,15 @@ for i in range(no_rep):
     # cal_f_theta = cal_f.theta.rnd(500)
     # boxplot_param(cal_f_theta)
     plot_pred_errors(cal_f_ml, xtest, np.sqrt(real_data_test))
-    
-    score_matrix[i, 0] = score_func(xtest, real_data_test, 0.05, cal_f_ml)
-    score_matrix2[i, 0] = score_func_emuvar(xtest, real_data_test, 0.05, cal_f_ml, emulator_f_PCGPwM)
-    print('score ml: ', score_matrix[i, 0])
 
     cal_f = calibrator(emu = emulator_f_PCGPwM,
                        y = np.sqrt(real_data_tr),
                        x = xtr,
                        thetaprior = prior_covid,
-                       method = 'mlbayes',
+                       method = 'mlbayeswoodbury',
                        yvar = obsvar,
-                       args = {'theta0': initial, 
+                       args = {'sampler': 'metropolis_hastings',
+                               'theta0': initial, 
                                'numsamp' : 500, 
                                'stepType' : 'normal', 
                                'stepParam' : np.array([0.1, 0.1, 0.1, 0.1])})
@@ -152,11 +132,4 @@ for i in range(no_rep):
     # cal_f_theta = cal_f.theta.rnd(500)
     # boxplot_param(cal_f_theta)
     plot_pred_errors(cal_f, xtest, np.sqrt(real_data_test))
-    
-    score_matrix[i, 1] = score_func(xtest, real_data_test, 0.05, cal_f)    
-    score_matrix2[i, 1] = score_func_emuvar(xtest, real_data_test, 0.05, cal_f, emulator_f_PCGPwM)
-    print('score no ml: ', score_matrix[i, 1])    
-    
-print(score_matrix.mean(axis=0))
-print(score_matrix2.mean(axis=0))
 

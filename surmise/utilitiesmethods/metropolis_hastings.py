@@ -1,3 +1,4 @@
+breakpoint()
 import numpy as np
 import scipy.stats as sps
 
@@ -61,7 +62,7 @@ def sampler(logpostfunc, options={}):
     p = thetastart.shape[1]
     lposterior = np.zeros(1000 + n)
     theta = np.zeros((1000 + n, thetastart.shape[1]))
-    lposterior[0] = logpostfunc(thetastart)
+    lposterior[0] = logpostfunc(thetastart, return_grad=False)
     theta[0, :] = thetastart
     n_acc = 0
 
@@ -77,7 +78,7 @@ def sampler(logpostfunc, options={}):
         theta_cand = np.reshape(np.array(theta_cand), (1, p))
 
         # Compute loglikelihood
-        logpost = logpostfunc(theta_cand)
+        logpost = logpostfunc(theta_cand, return_grad=False)
         
         if np.isfinite(logpost):
             p_accept = min(1, np.exp(logpost - lposterior[i-1]))

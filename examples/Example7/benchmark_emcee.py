@@ -4,6 +4,7 @@ import numpy as np
 from random import sample
 import scipy.stats as sps
 from ml_methods import fit_RandomForest
+from ml_methods import fit_logisticRegression
 from surmise.emulation import emulator
 from visualization_tools import boxplot_param
 from visualization_tools import plot_pred_interval_emce
@@ -20,12 +21,12 @@ param_values = np.loadtxt('param_values.csv', delimiter=',')
 func_eval = np.loadtxt('func_eval.csv', delimiter=',')
 
 # Get the random sample of 100
-rndsample = sample(range(0, 1000), 500)
+rndsample = [i for i in range(3000)] #sample(range(0, 1000), 500)
 func_eval_rnd = func_eval[rndsample, :]
 param_values_rnd = param_values[rndsample, :]
 
 # (No Filter) Observe computer model outputs
-plot_model_data(description, np.sqrt(func_eval_rnd), np.sqrt(real_data), param_values_rnd)
+plot_model_data(description, func_eval_rnd, real_data, param_values_rnd)
 
 # Filter out the data
 T0 = 100
@@ -40,10 +41,10 @@ func_eval_in = func_eval_rnd[np.logical_and.reduce((func_eval_rnd[:, 25] < 350,
                                                     func_eval_rnd[:, 100] > T0,
                                                     func_eval_rnd[:, 100] < T1)), :]
 
-pair_scatter(par_in)
-pair_scatter(par_out)
+#pair_scatter(par_in)
+#pair_scatter(par_out)
 # (Filter) Observe computer model outputs
-plot_model_data(description, np.sqrt(func_eval_in), np.sqrt(real_data), par_in)
+plot_model_data(description, func_eval_in, real_data, par_in)
 
 # Get the x values 
 keeptimepoints = np.arange(10, description.shape[0], step=5)
@@ -75,80 +76,54 @@ class prior_covid:
                           0.1+4.9*sps.beta.rvs(2, 2, size=n),
                           1+6*sps.beta.rvs(2, 2, size=n),
                           1+6*sps.beta.rvs(2, 2, size=n))).T
+    
+#pair_scatter(prior_covid.rnd(1000))
 
-# class prior_covid:
-#     """ This defines the class instance of priors provided to the method. """
-#     #sps.uniform.logpdf(theta[:, 0], 3, 4.5)
-#     def lpdf(theta):
-#         return (sps.beta.logpdf((theta[:, 0]-1.9)/2, 2, 2) +
-#                 sps.beta.logpdf((theta[:, 1]-0.1)/4.9, 2, 2) +
-#                 sps.beta.logpdf((theta[:, 2]-3)/2, 2, 2) +
-#                 sps.beta.logpdf((theta[:, 3]-3)/2, 2, 2)).reshape((len(theta), 1))
-#     def rnd(n):
-#         return np.vstack((1.9+2*sps.beta.rvs(2, 2, size=n),
-#                           0.1+4.9*sps.beta.rvs(2, 2, size=n),
-#                           3+2*sps.beta.rvs(2, 2, size=n),
-#                           3+2*sps.beta.rvs(2, 2, size=n))).T
-    
-# class prior_covid:
-#     """ This defines the class instance of priors provided to the method. """
-#     #sps.uniform.logpdf(theta[:, 0], 3, 4.5)
-#     def lpdf(theta):
-#         return (sps.triang.logpdf(theta[:, 0], c=(2.9-1.9)/2, loc=1.9, scale=2) +
-#                 sps.triang.logpdf(theta[:, 1], c=(1-0.1)/4.9, loc=0.1, scale=4.9) +
-#                 sps.triang.logpdf(theta[:, 2], c=(4-3)/2, loc=3, scale=2) +
-#                 sps.triang.logpdf(theta[:, 3], c=(4-3)/2, loc=3, scale=2)).reshape((len(theta), 1))
-#     def rnd(n):
-#         return np.vstack((sps.triang.rvs(c=(2.9-1.9)/2, loc=1.9, scale=2, size=n),
-#                           sps.triang.rvs(c=(1-0.1)/4.9, loc=0.1, scale=4.9, size=n),
-#                           sps.triang.rvs(c=(4-3)/2, loc=3, scale=2, size=n),
-#                           sps.triang.rvs(c=(4-3)/2, loc=3, scale=2, size=n))).T
-    
-pair_scatter(prior_covid.rnd(1000))
-
-    
+ 
 def log_likelihood(theta, obsvar, emu, y, x):
+    r"""
+    This is a optional docstring for an internal function.
+    """
+
     a, b, c, d = theta
     param = np.array([[a, b, c, d]])
-    # Obtain emulator results
+
     emupredict = emu.predict(x, param)
     emumean = emupredict.mean()
+    emuvar = emupredict.var()
+    emucovxhalf = emupredict.covxhalf()
+    loglik = np.zeros((emumean.shape[1], 1))
 
-    try:
-        emucov = emupredict.covx()
-        is_cov = True
-    except Exception:
-        emucov = emupredict.var()
-        is_cov = False
+    if np.any(np.abs(emuvar/(10 ** (-4) +
+                              (1 + 10**(-4))*np.sum(np.square(emucovxhalf),
+                                                    2))) > 1):
+        emuoldpredict = emu.predict(x)
+        emuoldvar = emuoldpredict.var()
+        emuoldcxh = emuoldpredict.covxhalf()
+        obsvar += np.mean(np.abs(emuoldvar -
+                                  np.sum(np.square(emuoldcxh), 2)), 1)
 
-    p = emumean.shape[1]
-    n = emumean.shape[0]
-    y = y.reshape((n, 1))
-
-    loglikelihood = np.zeros((p, 1))
-
-    for k in range(0, p):
-        m0 = emumean[:, k].reshape((n, 1))
-
-        # Compute the covariance matrix
-        if is_cov is True:
-            s0 = emucov[:, k, :].reshape((n, n))
-            CovMat = s0 + np.diag(np.squeeze(obsvar))
+    # compute loglikelihood for each theta value in theta
+    for k in range(0, emumean.shape[1]):
+        m0 = emumean[:, k]
+        S0 = np.squeeze(emucovxhalf[:, k, :])
+        stndresid = (np.squeeze(y) - m0) / np.sqrt(obsvar)
+        term1 = np.sum(stndresid ** 2)
+        J = (S0.T / np.sqrt(obsvar)).T
+        if J.ndim < 1.5:
+            J = J[:, None]
+            stndresid = stndresid[:, None]
+        J2 = J.T @ stndresid
+        W, V = np.linalg.eigh(np.eye(J.shape[1]) + J.T @ J)
+        if W.shape[0] > 1:
+            J3 = V @ np.diag(1/W) @ V.T @ J2
         else:
-            s0 = emucov[:, k].reshape((n, 1))
-            CovMat = np.diag(np.squeeze(s0)) + np.diag(np.squeeze(obsvar))
+            J3 = ((V**2)/W) * J2
+        term2 = np.sum(J3 * J2)
+        residsq = term1 - term2
+        loglik[k, 0] = -0.5 * residsq - 0.5 * np.sum(np.log(W))
 
-        # Get the decomposition of covariance matrix
-        CovMatEigS, CovMatEigW = np.linalg.eigh(CovMat)
-
-        # Calculate residuals
-        resid = m0 - y
-
-        CovMatEigInv = CovMatEigW @ np.diag(1/CovMatEigS) @ CovMatEigW.T
-        loglikelihood[k] = float(-0.5 * resid.T @ CovMatEigInv @ resid -
-                                 0.5 * np.sum(np.log(CovMatEigS)))
-
-    return float(loglikelihood)
+    return float(loglik)
 
 # Define the posterior function
 def log_probability(theta, prior_covid, emu, y, x, obsvar, clf_method):
@@ -162,14 +137,22 @@ def log_probability(theta, prior_covid, emu, y, x, obsvar, clf_method):
     else:
         logpost = lp + log_likelihood(theta, obsvar, emu, y, x)
         if clf_method is not None:
-            ml_probability = clf_method.predict_proba(param)[:, 1]
+            
+            param_f = 1*param
+            for i_id in range(0, 4):
+                for j_id in range(i_id, 4):
+                    param_f = np.concatenate([param_f, np.reshape(param_f[0, i_id] * param_f[0, j_id], (1, 1))], axis = 1)
+       
+        
+            ml_probability = clf_method.predict_proba(param_f)[:, 1]
+            #print(ml_probability)
             ml_logprobability = np.log(ml_probability)
             logpost += ml_logprobability
 
         return float(logpost)
     
 # Fit a classification model
-classification_model = fit_RandomForest(func_eval, param_values, T0, T1)
+classification_model = fit_logisticRegression(func_eval, param_values, T0, T1)
 
 obsvar = np.maximum(0.01*np.sqrt(real_data_tr), 1)
 
@@ -190,8 +173,8 @@ sampler_ml = emcee.EnsembleSampler(nwalkers, ndim, log_probability,
 sampler_ml.run_mcmc(initial, 1000, progress=True)
 flat_samples_ml = sampler_ml.get_chain(discard=500, thin=15, flat=True)
 #plot_pred_interval_emce(emulator_f_PCGPwM, flat_samples_ml, xtr, np.sqrt(real_data_tr))
-boxplot_param(flat_samples_ml)
-plot_pred_errors_emcee(flat_samples_ml, emulator_f_PCGPwM, xtest, np.sqrt(real_data_test))
+#boxplot_param(flat_samples_ml)
+plot_pred_errors_emcee(flat_samples_ml, emulator_f_PCGPwM, xtest, np.sqrt(real_data_test), 'Posterior predictions with adjustment factor')
 
 
 sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability, 
@@ -204,26 +187,114 @@ sampler = emcee.EnsembleSampler(nwalkers, ndim, log_probability,
 sampler.run_mcmc(initial, 1000, progress=True)
 flat_samples = sampler.get_chain(discard=500, thin=15, flat=True)
 #plot_pred_interval_emce(emulator_f_PCGPwM, flat_samples, xtr, np.sqrt(real_data_tr))
-boxplot_param(flat_samples)
-plot_pred_errors_emcee(flat_samples, emulator_f_PCGPwM, xtest, np.sqrt(real_data_test))
+#boxplot_param(flat_samples)
+plot_pred_errors_emcee(flat_samples, emulator_f_PCGPwM, xtest, np.sqrt(real_data_test), 'Posterior predictions without adjustment factor')
 
 
-# (Filter) Fit an emulator via 'PCGP'
-emulator_nof_PCGPwM = emulator(x=x,
-                               theta=param_values_rnd,
-                               f=(func_eval_rnd)**(0.5),
-                               method='PCGPwM')
 
-sampler_nof = emcee.EnsembleSampler(nwalkers, ndim, log_probability, 
-                                    args=(prior_covid,
-                                    emulator_nof_PCGPwM,
-                                    np.sqrt(real_data_tr),
-                                    xtr, 
-                                    obsvar,
-                                    None))
+plt.rcParams["font.size"] = "8"
+fig, axs = plt.subplots(1, 4, figsize=(14, 4))
+paraind = 0
+labels = [r'$\theta_1$', r'$\theta_2$', r'$\theta_3$', r'$\theta_4$']
+for i in range(4):
+    axs[i].boxplot([flat_samples[:, i], flat_samples_ml[:, i]], widths=(0.6, 0.6))
+    axs[i].set_title(labels[i], fontsize=16)
+fig.tight_layout()
+fig.subplots_adjust(bottom=0.05, top=0.95)
+plt.show()
 
-sampler_nof.run_mcmc(initial, 1000, progress=True)
-flat_samples_nof = sampler_nof.get_chain(discard=500, thin=15, flat=True)
-#plot_pred_interval_emce(emulator_f_PCGPwM, flat_samples, xtr, np.sqrt(real_data_tr))
-boxplot_param(flat_samples_nof)
-plot_pred_errors_emcee(flat_samples_nof, emulator_nof_PCGPwM, xtest, np.sqrt(real_data_test))
+
+# import seaborn as sns
+# sns.set_style("whitegrid", {'axes.grid' : False})
+# #sns.set(rc={'figure.figsize':(4,3)})
+# sns.kdeplot(classification_model.predict_proba(flat_samples_ml)[:, 1], color="black", label='adjustment', linestyle="-", legend = True)
+# sns.kdeplot(classification_model.predict_proba(flat_samples)[:, 1], color="black", label='no adjustment', linestyle="--", legend = True)
+# plt.xlabel(r'$p(r(\theta)=1|\theta)$', fontsize=16)
+# plt.legend()
+# plt.show()
+
+
+ml_sample = np.ones((len(flat_samples_ml), 1)) * np.median(flat_samples_ml, axis=0)
+ml_sample[:, 0] = flat_samples_ml[:, 0]
+for i in range(0, 4):
+    for j in range(i, 4):
+        ml_sample = np.concatenate([ml_sample, np.reshape(ml_sample[:, i] * ml_sample[:, j], (len(ml_sample), 1))], axis = 1)
+
+import seaborn as sns
+sns.set_style("whitegrid", {'axes.grid' : False})
+
+
+plt.rcParams["font.size"] = "8"
+fig, axs = plt.subplots(2, 4, figsize=(14, 6))
+paraind = 0
+labels = [r'$\theta_1$', r'$\theta_2$', r'$\theta_3$', r'$\theta_4$']
+
+for idi in range(4):
+    ml_sample = np.ones((len(flat_samples_ml), 1)) * np.median(flat_samples_ml, axis=0)
+    ml_sample[:, idi] = flat_samples_ml[:, idi]
+    
+    
+    lik = np.zeros((len(flat_samples)))
+    for i in range(len(flat_samples_ml)):
+        lik[i] = log_likelihood(ml_sample[i,:], obsvar, emulator_f_PCGPwM, np.sqrt(real_data_tr), xtr)
+    
+    mladj = np.max(lik)
+    lik = np.max(lik)/lik #np.exp(lik)/np.max(np.exp(lik))
+    
+    for i in range(0, 4):
+        for j in range(i, 4):
+            ml_sample = np.concatenate([ml_sample, np.reshape(ml_sample[:, i] * ml_sample[:, j], (len(ml_sample), 1))], axis = 1)
+        
+    xp = ml_sample[:, idi]
+    sort_id = np.argsort(xp)
+    yp = classification_model.predict_proba(ml_sample)[:, 1]
+    axs[0, idi].plot(xp[sort_id], yp[sort_id], 'k')
+    axs[1, idi].plot(xp[sort_id], lik[sort_id], 'k')
+    axs[0, idi].tick_params(axis='x', labelsize= 10)
+    axs[1, idi].tick_params(axis='x', labelsize= 10)
+    axs[0, idi].tick_params(axis='y', labelsize= 10)
+    axs[1, idi].tick_params(axis='y', labelsize= 10)
+    axs[0, 0].set_ylabel('acceptance probability', fontsize=12)
+    axs[1, 0].set_ylabel('conditional likelihood', fontsize=12)
+
+    axs[0, idi].set_title(label=labels[idi], fontsize=16)
+
+plt.show()
+
+
+
+# lik1 = np.zeros((len(flat_samples_ml)))
+# lik2 = np.zeros((len(flat_samples)))
+# for i in range(len(flat_samples_ml)):
+#     lik1[i] = log_likelihood(flat_samples_ml[i,:], obsvar, emulator_f_PCGPwM, np.sqrt(real_data_tr), xtr)
+#     lik2[i] = log_likelihood(flat_samples[i,:], obsvar, emulator_f_PCGPwM, np.sqrt(real_data_tr), xtr)
+    
+# import seaborn as sns
+# sns.set_style("whitegrid", {'axes.grid' : False})
+# #sns.set(rc={'figure.figsize':(4,3)})
+# sns.kdeplot(lik1, color="black", label='adjustment', linestyle="-", legend = True)
+# sns.kdeplot(lik2, color="black", label='no adjustment', linestyle="--", legend = True)
+# plt.xlabel(r'$p(y|\theta, r(\theta)=1)$', fontsize=16)
+# plt.legend()
+# plt.show()
+
+#plt.plot(flat_samples_ml[:,0],lik1)
+# # (Filter) Fit an emulator via 'PCGP'
+# emulator_nof_PCGPwM = emulator(x=x,
+#                                theta=param_values_rnd,
+#                                f=(func_eval_rnd)**(0.5),
+#                                method='PCGPwM')
+
+# sampler_nof = emcee.EnsembleSampler(nwalkers, ndim, log_probability, 
+#                                     args=(prior_covid,
+#                                     emulator_nof_PCGPwM,
+#                                     np.sqrt(real_data_tr),
+#                                     xtr, 
+#                                     obsvar,
+#                                     None))
+
+# sampler_nof.run_mcmc(initial, 1000, progress=True)
+# flat_samples_nof = sampler_nof.get_chain(discard=500, thin=15, flat=True)
+# #plot_pred_interval_emce(emulator_f_PCGPwM, flat_samples, xtr, np.sqrt(real_data_tr))
+# boxplot_param(flat_samples_nof)
+# plot_pred_errors_emcee(flat_samples_nof, emulator_nof_PCGPwM, xtest, np.sqrt(real_data_test))

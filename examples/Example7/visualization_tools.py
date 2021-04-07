@@ -2,9 +2,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-    
+  
+
+def boxplot_compare(theta1, theta2):
+    plt.rcParams["font.size"] = "8"
+    fig, axs = plt.subplots(1, 4, figsize=(14, 4))
+
+    labels = [r'$\theta_1$', r'$\theta_2$', r'$\theta_3$', r'$\theta_4$']
+    for i in range(4):
+        axs[i].boxplot([theta1[:, i], theta2[:, i]], widths=(0.6, 0.6))
+        axs[i].set_title(labels[i], fontsize=16)
+    fig.tight_layout()
+    fig.subplots_adjust(bottom=0.05, top=0.95)
+    plt.show()
+
 def boxplot_param(theta):
-    plt.rcParams["font.size"] = "16"
+    plt.rcParams["font.size"] = "8"
     fig, axs = plt.subplots(2, 2, figsize=(10, 8))
     paraind = 0
     for i in range(2):
@@ -19,7 +32,7 @@ def boxplot_param(theta):
 def plot_pred_interval(cal, x, real_data):
     pr = cal.predict(x)
     rndm_m = pr.rnd(s = 100)
-    plt.rcParams["font.size"] = "10"
+    plt.rcParams["font.size"] = "8"
     fig, axs = plt.subplots(3, figsize=(8, 12))
     dim = int(len(x)/3)
     for j in range(3):
@@ -56,7 +69,7 @@ def plot_pred_interval(cal, x, real_data):
 def plot_pred_errors(cal, xtest, real_data_test):
     pr = cal.predict(xtest)
     rndm_m = pr.rnd(s = 100)
-    plt.rcParams["font.size"] = "10"
+    plt.rcParams["font.size"] = "8"
     fig, axs = plt.subplots(3, figsize=(8, 12))
 
     for j in range(3):
@@ -93,15 +106,16 @@ def plot_pred_errors(cal, xtest, real_data_test):
     fig.subplots_adjust(top=0.9) 
     plt.show()
 
-def plot_pred_errors_emcee(theta, emu, xtest, real_data_test):
+def plot_pred_errors_emcee(theta, emu, xtest, real_data_test, title):
     pr = emu.predict(theta=theta, x=xtest)
     rndm_m = pr.mean()
-    plt.rcParams["font.size"] = "10"
+    plt.rcParams["font.size"] = "12"
     fig, axs = plt.subplots(3, figsize=(8, 12))
 
     for j in range(3):
         if j == 0:
             v = 'total_hosp'
+            axs[j].set_title(title, fontsize=16)
         elif j == 1:
             v = 'icu_admission'
         else:
@@ -111,12 +125,17 @@ def plot_pred_errors_emcee(theta, emu, xtest, real_data_test):
         y = real_data_test[ids]
         dim = len(y)
         
+        y = y**2
         upper = np.percentile(rndm_m[ids, :], 97.5, axis = 1)
         lower = np.percentile(rndm_m[ids, :], 2.5, axis = 1)
-        median = np.percentile(rndm_m[ids, :], 50, axis = 1)
-        
+        median = np.percentile(rndm_m[ids, :], 50, axis = 1) 
 
-        p1 = axs[j].errorbar(range(0, dim), median, yerr = [median-lower, upper-median], color = 'grey')
+        upper = upper**2
+        lower = lower**2
+        median = median**2
+        
+        p1 = axs[j].errorbar(range(0, dim), median, yerr = [median-lower, upper-median], ecolor="grey", color = 'black')
+        #p2 = axs[j].plot(range(0, dim), median, color = 'black')
         #p1 = axs[j].plot(median, color = 'black')
         #axs[j].fill_between(range(0, dim), lower, upper, color = 'grey')
         p3 = axs[j].plot(range(0, dim), y, 'ro' ,markersize = 5, color='red')
@@ -127,9 +146,11 @@ def plot_pred_errors_emcee(theta, emu, xtest, real_data_test):
         elif j == 2:
             axs[j].set_ylabel('COVID-19 Hospital Admissions')
         axs[j].set_xlabel('Time (days)')  
+        print(p1[0])
+        axs[j].legend([p1[0], p3[0]], ['mean', 'observations'])
     
-        axs[j].legend([p1[0], p3[0]], ['prediction','observations'])
     fig.tight_layout()
+    #fig.suptitle(title, fontsize=16)
     fig.subplots_adjust(top=0.9) 
     plt.show()
     
@@ -138,7 +159,7 @@ def plot_model_data(description, func_eval, real_data, param_values):
     Plots a list of profiles in the same figure. Each profile corresponds
     to a simulation replica for the given instance.
     '''
-    plt.rcParams["font.size"] = "10"
+    plt.rcParams["font.size"] = "8"
     N = len(param_values)
     D = description.shape[1]
     T = len(np.unique(description[:,0]))
@@ -156,7 +177,7 @@ def plot_model_data(description, func_eval, real_data, param_values):
         elif j == 2:
             axs[j].set_ylabel('COVID-19 Hospital Admissions')
         axs[j].set_xlabel('Time (days)')
-        axs[j].legend([p1[0], p2[0]], ['observations', 'computer model'])
+        axs[j].legend([p1[0], p2[0]], ['observations', 'simulator output'])
     plt.show()
     
 def pair_scatter(params):
@@ -173,9 +194,10 @@ def plot_pred_interval_emce(emu, samples, x, real_data):
     for j in range(len(samples)):
         mean_pred[j, :] = emu.predict(x=x, theta=samples[j,:]).mean().reshape((len(real_data),))
         
-    plt.rcParams["font.size"] = "10"
+    plt.rcParams["font.size"] = "8"
     fig, axs = plt.subplots(3, figsize=(8, 12))
 
+    #real_data = real_data**2
     for j in range(3):
         if j == 0:
             v = 'total_hosp'
@@ -191,6 +213,10 @@ def plot_pred_interval_emce(emu, samples, x, real_data):
         upper = np.percentile(mean_pred[:, ids], 97.5, axis = 0)
         lower = np.percentile(mean_pred[:, ids], 2.5, axis = 0)
         median = np.percentile(mean_pred[:, ids], 50, axis = 0)
+        
+        #upper = upper**2
+        #lower = lower**2
+        #median = median**2
         p1 = axs[j].plot(median, color = 'black')
         axs[j].fill_between(range(0, dim), lower, upper, color = 'grey')
         p3 = axs[j].plot(range(0, dim), real_data[ids], 'ro' ,markersize = 5, color='red')

@@ -1,4 +1,3 @@
-breakpoint()
 import numpy as np
 import scipy.stats as sps
 from surmise.utilities import sampler
@@ -76,12 +75,19 @@ def fit(fitinfo, emu, x, y,  args=None):
         clf_method = args['clf_method']
     else:
         clf_method = None
-    try:
-        theta = thetaprior.rnd(10)
-        emupredict = emu.predict(x, theta, args={'return_grad': True})
-        emupredict.mean_gradtheta()
-        emureturn_grad = True
-    except Exception:
+    myusedir = True
+    if 'usedir' in args.keys() and args['usedir'] == False:
+        myusedir = False
+
+    if myusedir:
+        try:
+            theta = thetaprior.rnd(10)
+            emupredict = emu.predict(x, theta, args={'return_grad': True})
+            emupredict.mean_gradtheta()
+            emureturn_grad = True
+        except Exception:
+            emureturn_grad = False
+    else:
         emureturn_grad = False
 
     if emureturn_grad and 'lpdf_grad' not in dir(thetaprior):
@@ -94,9 +100,9 @@ def fit(fitinfo, emu, x, y,  args=None):
 
             for k in range(0, theta.shape[1]):
                 thetaprop = copy.copy(theta)
-                thetaprop[:, k] += 10**(-6)
+                thetaprop[:, k] += 10**(-3)
                 f_base2 = thetaprior.lpdf(thetaprop[inds, :])
-                grad[inds, k] = 10**(6) * (f_base2 -
+                grad[inds, k] = 10**(3) * (f_base2 -
                                            f_base[inds]).reshape(n_finite,)
 
             return grad
@@ -120,14 +126,6 @@ def fit(fitinfo, emu, x, y,  args=None):
                                                   args)
             logpost[inds] += loglikinds
             dlogpost[inds] += dloglikinds
-            if clf_method is not None:
-                ml_probability = clf_method.predict_proba(theta[inds, :])[0][1]
-                ml_logprobability = np.log(ml_probability) \
-                    if ml_probability > 0 else np.inf
-                if np.isfinite(ml_logprobability):
-                    logpost[inds] += ml_logprobability
-                else:
-                    logpost[inds] = np.inf
             return logpost, dlogpost
         else:
             # obtain the log-likelihood
@@ -137,16 +135,18 @@ def fit(fitinfo, emu, x, y,  args=None):
                                     y,
                                     x,
                                     args)
-            
             if clf_method is not None:
-                ml_probability = clf_method.predict_proba(theta[inds, :])[0][1]
-                ml_logprobability = np.log(ml_probability) \
-                    if ml_probability > 0 else np.inf
-                if np.isfinite(ml_logprobability):
-                    logpost[inds] += ml_logprobability
-                else:
-                    logpost[inds] = np.inf
-                
+                theta_f = 1*theta
+                for i_id in range(0, 4):
+                    for j_id in range(i_id, 4):
+                        theta_f = np.concatenate([theta_f, np.reshape(theta_f[:, i_id] * theta_f[:, j_id], (len(theta_f), 1))], axis = 1)
+                    
+                ml_probability = clf_method.predict_proba(theta_f)[:, 1]
+                #print(ml_probability)
+                ml_logprobability = np.reshape(np.log(ml_probability),
+                                               (len(theta), 1))
+                logpost += ml_logprobability
+            
             return logpost
 
     theta = thetaprior.rnd(1000)
@@ -156,15 +156,23 @@ def fit(fitinfo, emu, x, y,  args=None):
         theta = np.vstack((theta, copy.copy(emu._emulator__theta)))
 
     # obtain theta draws from posterior distribution
-    args['theta0'] = theta
-    args['sampler'] = 'LMC'
-    sampler_obj = sampler(logpostfunc=logpostfull_wgrad, options=args)
-    theta = sampler_obj.sampler_info['theta']
+    if args['sampler'] == 'LMC':
+        args['theta0'] = theta
+        sampler_obj = sampler(logpostfunc=logpostfull_wgrad, options=args)
+        theta = sampler_obj.sampler_info['theta']
+    else:
+        if 'theta0' not in args.keys():
+            args['theta0'] = thetaprior.rnd(1)
+        if 'stepParam' not in args.keys():
+            args['stepParam'] = np.std(thetaprior.rnd(1000), axis=0)
+        sampler_obj = sampler(logpostfunc=logpostfull_wgrad, options=args)
+        theta = sampler_obj.sampler_info['theta']
 
     # obtain log-posterior of theta values
     ladj = logpostfull_wgrad(theta, return_grad=False)
     mladj = np.max(ladj)
     fitinfo['lpdfapproxnorm'] = np.log(np.mean(np.exp(ladj - mladj))) + mladj
+    fitinfo['lpdfapproxnorm_un'] = ladj
     fitinfo['thetarnd'] = theta
     fitinfo['y'] = y
     fitinfo['x'] = x
