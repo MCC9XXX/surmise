@@ -60,38 +60,38 @@ emulator_f_PCGPwM = emulator(x=x,
 
     
 # Define a class for prior of 10 parameters
-class prior_covid:
-    """ This defines the class instance of priors provided to the method. """
-    #sps.uniform.logpdf(theta[:, 0], 3, 4.5)
-    def lpdf(theta):
-        return (sps.beta.logpdf((theta[:, 0]-1)/4, 2, 2) +
-                sps.beta.logpdf((theta[:, 1]-0.1)/4.9, 2, 2) +
-                sps.beta.logpdf((theta[:, 2]-1)/6, 2, 2) +
-                sps.beta.logpdf((theta[:, 3]-1)/6, 2, 2)).reshape((len(theta), 1))
-    def rnd(n):
-        return np.vstack((1+4*sps.beta.rvs(2, 2, size=n),
-                          0.1+4.9*sps.beta.rvs(2, 2, size=n),
-                          1+6*sps.beta.rvs(2, 2, size=n),
-                          1+6*sps.beta.rvs(2, 2, size=n))).T
-
 # class prior_covid:
 #     """ This defines the class instance of priors provided to the method. """
 #     #sps.uniform.logpdf(theta[:, 0], 3, 4.5)
 #     def lpdf(theta):
-#         return (sps.uniform.logpdf(theta[:, 0], 1, 4) +
-#                 sps.uniform.logpdf(theta[:, 1], 0.1, 4.9) +
-#                 sps.uniform.logpdf(theta[:, 2], 1, 6) +
-#                 sps.uniform.logpdf(theta[:, 3], 1, 6)).reshape((len(theta), 1))
+#         return (sps.beta.logpdf((theta[:, 0]-1)/4, 2, 2) +
+#                 sps.beta.logpdf((theta[:, 1]-0.1)/4.9, 2, 2) +
+#                 sps.beta.logpdf((theta[:, 2]-3)/2, 2, 2) +
+#                 sps.beta.logpdf((theta[:, 3]-3)/2, 2, 2)).reshape((len(theta), 1))
 #     def rnd(n):
-#         return np.vstack((sps.uniform.rvs(1, 4, size=n),
-#                           sps.uniform.rvs(0.1, 4.9, size=n),
-#                           sps.uniform.rvs(1, 6, size=n),
-#                           sps.uniform.rvs(1, 6, size=n))).T
+#         return np.vstack((1+4*sps.beta.rvs(2, 2, size=n),
+#                           0.1+4.9*sps.beta.rvs(2, 2, size=n),
+#                           3+2*sps.beta.rvs(2, 2, size=n),
+#                           3+2*sps.beta.rvs(2, 2, size=n))).T
+
+class prior_covid:
+    """ This defines the class instance of priors provided to the method. """
+    #sps.uniform.logpdf(theta[:, 0], 3, 4.5)
+    def lpdf(theta):
+        return (sps.uniform.logpdf(theta[:, 0], 1, 4) +
+                sps.uniform.logpdf(theta[:, 1], 0.1, 6.9) +
+                sps.uniform.logpdf(theta[:, 2], 3, 2) +
+                sps.uniform.logpdf(theta[:, 3], 3, 2)).reshape((len(theta), 1))
+    def rnd(n):
+        return np.vstack((sps.uniform.rvs(1, 4, size=n),
+                          sps.uniform.rvs(0.1, 6.9, size=n),
+                          sps.uniform.rvs(3, 2, size=n),
+                          sps.uniform.rvs(3, 2, size=n))).T
     
 # Fit a classification model
 classification_model = fit_logisticRegression(func_eval, param_values, T0, T1)
 
-obsvar = np.maximum(0.01*np.sqrt(real_data_tr), 1)
+obsvar = np.maximum(0.1*np.sqrt(real_data_tr), 1)
 
 
 cal_f = calibrator(emu = emulator_f_PCGPwM,
@@ -125,3 +125,4 @@ cal_f_ml_theta = cal_f_ml.theta.rnd(500)
 plot_pred_errors(cal_f_ml, xtest, np.sqrt(real_data_test))
 
 boxplot_compare(cal_f_theta, cal_f_ml_theta)
+

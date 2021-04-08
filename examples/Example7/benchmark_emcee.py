@@ -21,7 +21,7 @@ param_values = np.loadtxt('param_values.csv', delimiter=',')
 func_eval = np.loadtxt('func_eval.csv', delimiter=',')
 
 # Get the random sample of 100
-rndsample = [i for i in range(3000)] #sample(range(0, 1000), 500)
+rndsample = sample(range(0, 1000), 1000) #[i for i in range(3000)] #sample(range(0, 1000), 500)
 func_eval_rnd = func_eval[rndsample, :]
 param_values_rnd = param_values[rndsample, :]
 
@@ -154,7 +154,7 @@ def log_probability(theta, prior_covid, emu, y, x, obsvar, clf_method):
 # Fit a classification model
 classification_model = fit_logisticRegression(func_eval, param_values, T0, T1)
 
-obsvar = np.maximum(0.01*np.sqrt(real_data_tr), 1)
+obsvar = np.maximum(0.1*np.sqrt(real_data_tr), 1)
 
 # define negative loglikelihood
 nll = lambda *args: -log_likelihood(*args)
@@ -262,39 +262,7 @@ for idi in range(4):
 plt.show()
 
 
+#mladj = np.max(yp)
+#ypadj = np.log(np.exp(yp - mladj)) + mladj
 
-# lik1 = np.zeros((len(flat_samples_ml)))
-# lik2 = np.zeros((len(flat_samples)))
-# for i in range(len(flat_samples_ml)):
-#     lik1[i] = log_likelihood(flat_samples_ml[i,:], obsvar, emulator_f_PCGPwM, np.sqrt(real_data_tr), xtr)
-#     lik2[i] = log_likelihood(flat_samples[i,:], obsvar, emulator_f_PCGPwM, np.sqrt(real_data_tr), xtr)
-    
-# import seaborn as sns
-# sns.set_style("whitegrid", {'axes.grid' : False})
-# #sns.set(rc={'figure.figsize':(4,3)})
-# sns.kdeplot(lik1, color="black", label='adjustment', linestyle="-", legend = True)
-# sns.kdeplot(lik2, color="black", label='no adjustment', linestyle="--", legend = True)
-# plt.xlabel(r'$p(y|\theta, r(\theta)=1)$', fontsize=16)
-# plt.legend()
-# plt.show()
 
-#plt.plot(flat_samples_ml[:,0],lik1)
-# # (Filter) Fit an emulator via 'PCGP'
-# emulator_nof_PCGPwM = emulator(x=x,
-#                                theta=param_values_rnd,
-#                                f=(func_eval_rnd)**(0.5),
-#                                method='PCGPwM')
-
-# sampler_nof = emcee.EnsembleSampler(nwalkers, ndim, log_probability, 
-#                                     args=(prior_covid,
-#                                     emulator_nof_PCGPwM,
-#                                     np.sqrt(real_data_tr),
-#                                     xtr, 
-#                                     obsvar,
-#                                     None))
-
-# sampler_nof.run_mcmc(initial, 1000, progress=True)
-# flat_samples_nof = sampler_nof.get_chain(discard=500, thin=15, flat=True)
-# #plot_pred_interval_emce(emulator_f_PCGPwM, flat_samples, xtr, np.sqrt(real_data_tr))
-# boxplot_param(flat_samples_nof)
-# plot_pred_errors_emcee(flat_samples_nof, emulator_nof_PCGPwM, xtest, np.sqrt(real_data_test))
