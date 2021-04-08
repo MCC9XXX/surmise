@@ -149,8 +149,7 @@ def sampler(logpostfunc, options):
                                      theta0,
                                      method='L-BFGS-B',
                                      jac=neglogpostf_grad,
-                                     bounds=bounds,
-                                     options={'maxiter': 15, 'maxfun': 100})
+                                     bounds=bounds)
                 thetaop[k, :] = thetac + thetas * opval.x
 
             if not keeptryingwithgrad or not opval.success:
@@ -176,9 +175,9 @@ def sampler(logpostfunc, options):
     Lsave = logpostf_nograd(thetasave)
     tau = -1
     rho = 2 * (1 + (np.exp(2 * tau) - 1) / (np.exp(2 * tau) + 1))
-    numchain = 50
+    numchain = 100
     maxiters = 10
-    numsamppc = 10
+    numsamppc = 200
     covmat0 = np.diag(thetas)
     for iters in range(0, maxiters):
         startingv = np.random.choice(np.arange(0, Lsave.shape[0]),
@@ -229,7 +228,6 @@ def sampler(logpostfunc, options):
             whereswap = np.where(np.squeeze(swaprnd)
                                  < np.squeeze(fvalp - fval)
                                  + np.squeeze(qadj))[0]
-
             if whereswap.shape[0] > 0:
                 numtimes = numtimes + (whereswap.shape[0]/numchain)
                 thetac[whereswap, :] = 1*thetap[whereswap, :]

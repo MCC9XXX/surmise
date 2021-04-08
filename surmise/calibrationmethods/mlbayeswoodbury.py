@@ -108,8 +108,30 @@ def fit(fitinfo, emu, x, y,  args=None):
             return grad
         thetaprior.lpdf_grad = lpdf_grad
 
-    def logpostfull_wgrad(theta, return_grad=True):
 
+    def logprobacce(theta):
+        theta_f = 1 * theta
+        for i_id in range(0, theta.shape[1]):
+            for j_id in range(i_id, theta.shape[1]):
+                theta_f = np.concatenate(
+                    [theta_f, np.reshape(theta_f[:, i_id] * theta_f[:, j_id],
+                                         (len(theta_f), 1))], axis=1)
+        ml_probability = clf_method.predict_proba(theta_f)[:, 1]
+        ml_logprobability = np.reshape(np.log(ml_probability),
+                                       (len(theta), 1))
+        return ml_logprobability
+
+    def logprobacce_grad(theta):
+        L0 = logprobacce(theta)
+        dL = np.zeros((L0.shape[0],theta.shape[1]))
+        for i_id in range(0, theta.shape[1]):
+            theta_f = 1 * theta
+            theta_f[:,i_id] += 10**(-6)
+            L1 = logprobacce(theta_f)
+            dL[:, i_id] = np.squeeze((L1-L0) * (10**6))
+        return dL
+
+    def logpostfull_wgrad(theta, return_grad=True):
         # obtain the log-prior
         logpost = thetaprior.lpdf(theta)
         inds = np.where(np.isfinite(logpost))[0]
@@ -126,6 +148,9 @@ def fit(fitinfo, emu, x, y,  args=None):
                                                   args)
             logpost[inds] += loglikinds
             dlogpost[inds] += dloglikinds
+            if clf_method is not None:
+                logpost[inds] += logprobacce(theta[inds, :])
+                dlogpost[inds] += logprobacce_grad(theta[inds, :])
             return logpost, dlogpost
         else:
             # obtain the log-likelihood
@@ -136,27 +161,18 @@ def fit(fitinfo, emu, x, y,  args=None):
                                     x,
                                     args)
             if clf_method is not None:
-                theta_f = 1*theta
-                for i_id in range(0, 4):
-                    for j_id in range(i_id, 4):
-                        theta_f = np.concatenate([theta_f, np.reshape(theta_f[:, i_id] * theta_f[:, j_id], (len(theta_f), 1))], axis = 1)
-                    
-                ml_probability = clf_method.predict_proba(theta_f)[:, 1]
-                #print(ml_probability)
-                ml_logprobability = np.reshape(np.log(ml_probability),
-                                               (len(theta), 1))
-                logpost += ml_logprobability
+                logpost[inds] += logprobacce(theta[inds, :])
             
             return logpost
 
     theta = thetaprior.rnd(1000)
     if 'thetarnd' in fitinfo:
-        theta = np.vstack((fitinfo['thetarnd'], theta))
+        theta = np.vstack((theta,fitinfo['thetarnd']))
     if '_emulator__theta' in dir(emu):
         theta = np.vstack((theta, copy.copy(emu._emulator__theta)))
 
     # obtain theta draws from posterior distribution
-    if args['sampler'] == 'LMC':
+    if args['sampler'] == 'LMCv2':
         args['theta0'] = theta
         sampler_obj = sampler(logpostfunc=logpostfull_wgrad, options=args)
         theta = sampler_obj.sampler_info['theta']

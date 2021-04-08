@@ -17,7 +17,7 @@ param_values = np.loadtxt('param_values.csv', delimiter=',')
 func_eval = np.loadtxt('func_eval.csv', delimiter=',')
 
 # Get the random sample of 100
-rndsample = sample(range(0, 1000), 1000)
+rndsample = sample(range(0, 2000), 1000)
 func_eval_rnd = func_eval[rndsample, :]
 param_values_rnd = param_values[rndsample, :]
 
@@ -41,7 +41,7 @@ func_eval_in = func_eval_rnd[np.logical_and.reduce((func_eval_rnd[:, 25] < 350,
 plot_model_data(description, np.sqrt(func_eval_in), np.sqrt(real_data), par_in)
 
 # Get the x values 
-keeptimepoints = np.arange(10, description.shape[0], step=5)
+keeptimepoints = np.arange(10, description.shape[0], step=20)
 #keeptimepoints = np.concatenate((np.arange(0, 150), np.arange(0, 150) + 192, np.arange(0, 150) + 2*192))
 
 func_eval_in_tr = func_eval_in[:, keeptimepoints]
@@ -91,17 +91,21 @@ class prior_covid:
 # Fit a classification model
 classification_model = fit_logisticRegression(func_eval, param_values, T0, T1)
 
+<<<<<<< HEAD:examples/Example7/benchmark_woodbury_LMC_os.py
 obsvar = np.maximum(0.1*np.sqrt(real_data_tr), 1)
+=======
+obsvar = 0.04*real_data_tr
+>>>>>>> mlbayes:examples/Example7/benchmark_woodbury_LMC.py
 
 
 cal_f = calibrator(emu = emulator_f_PCGPwM,
                    y = np.sqrt(real_data_tr),
                    x = xtr,
                    thetaprior = prior_covid,
-                   method = 'mlbayeswoodbury',
+                   method = 'directbayeswoodbury',
                    yvar = obsvar,
-                   args = {'usedir': False,
-                           'sampler':'LMC'})
+                   args = {'usedir': True,
+                           'sampler':'LMCv2'})
 
 #plot_pred_interval(cal_f, xtr, np.sqrt(real_data_tr))
 cal_f_theta = cal_f.theta.rnd(500)
@@ -115,9 +119,9 @@ cal_f_ml = calibrator(emu = emulator_f_PCGPwM,
                    thetaprior = prior_covid,
                    method = 'mlbayeswoodbury',
                    yvar = obsvar,
-                   args = {'usedir': False,
+                   args = {'usedir': True,
                            'clf_method': classification_model, 
-                           'sampler':'LMC'})
+                           'sampler':'LMCv2'})
 
 #plot_pred_interval(cal_f_ml, xtr, np.sqrt(real_data_tr))
 cal_f_ml_theta = cal_f_ml.theta.rnd(500)
@@ -125,4 +129,8 @@ cal_f_ml_theta = cal_f_ml.theta.rnd(500)
 plot_pred_errors(cal_f_ml, xtest, np.sqrt(real_data_test))
 
 boxplot_compare(cal_f_theta, cal_f_ml_theta)
+<<<<<<< HEAD:examples/Example7/benchmark_woodbury_LMC_os.py
 
+=======
+print('script done!!!!!!!')
+>>>>>>> mlbayes:examples/Example7/benchmark_woodbury_LMC.py
