@@ -143,7 +143,7 @@ def sampler(logpostfunc, options):
     rho = 1/np.sqrt(theta0.shape[0])
 
     maxiters = 10
-    numsamppc = 500
+    numsamppc = 200
     numchain = 50
 
     thetac = theta0[np.random.choice(range(0, theta0.shape[0]),
@@ -162,8 +162,16 @@ def sampler(logpostfunc, options):
     hc = np.diag(thetas)
     covmat0 = np.diag(thetas**2)
 
+
+    numtimes = 0
+    tau = -1
+    rho = 2 * (1 + (np.exp(2 * tau) - 1) / (np.exp(2 * tau) + 1))
     adjrho = rho*temps**(1/3)
-    for k in range(0, numsamppc):
+    #autotune
+
+    tunesteps = 100
+    numtimes = 0
+    for k in range(0, 100+numsamppc):
         rvalo = np.random.normal(0, 1, thetac.shape)
         rval = np.sqrt(2) * adjrho * (rvalo @ hc)
         thetap = thetac + rval
@@ -181,7 +189,6 @@ def sampler(logpostfunc, options):
             fvalp = logpostf_nograd(thetap)
             fvalp = fvalp / temps
             qadj = np.zeros(fvalp.shape)
-
         swaprnd = np.log(np.random.uniform(size=fval.shape[0]))
         whereswap = np.where(np.squeeze(swaprnd)
                              < np.squeeze(fvalp - fval)
@@ -192,7 +199,6 @@ def sampler(logpostfunc, options):
             fval[whereswap] = 1*fvalp[whereswap]
             if logpostf_grad is not None:
                 dfval[whereswap, :] = 1*dfvalp[whereswap, :]
-        thetasave[:, k, :] = thetac
         for rt in range(1,numchain):
             rhoh = temps[rt-1]/temps[rt]
             if((fval[rt-1]*(rhoh-1)+fval[rt]*(1/rhoh-1))>
@@ -200,20 +206,21 @@ def sampler(logpostfunc, options):
                 fvaltemp = temps[rt-1]/temps[rt] * fval[rt - 1]
                 fval[rt-1] = temps[rt]/temps[rt-1] * fval[rt]
                 fval[rt] = 1*fvaltemp
-                thetatemp = thetac[rt-1,:]
-                thetac[rt-1,:] = thetac[rt,:]
+                thetatemp = 1*thetac[rt-1,:]
+                thetac[rt-1,:] = 1*thetac[rt,:]
                 thetac[rt,:] = 1*thetatemp
                 if logpostf_grad is not None:
                     dfvaltemp = temps[rt- 1]/temps[rt ]  * dfval[rt - 1,:]
                     dfval[rt-1,:] = temps[rt ] / temps[rt- 1] * dfval[rt,:]
                     dfval[rt,:] = 1*dfvaltemp
-        if logpostf_grad is not None:
-            fval, dfval = logpostf(thetac)
-            fval = fval / temps
-            dfval = dfval / temps
-        else:
-            fval = logpostf_nograd(thetac)
-            fval = fval / temps
+        if (k < tunesteps) and (k % 5 == 0):
+            tau = tau + 1 / np.sqrt(1 + k/5) * \
+                  ((numtimes / 5) - taracc)
+            rho = 2 * (1 + (np.exp(2 * tau) - 1) / (np.exp(2 * tau) + 1))
+            adjrho = rho*(temps**(1/3))
+            numtimes = 0
+        elif(k >= tunesteps):
+            thetasave[:, k-tunesteps, :] = 1 * thetac
 
     thetasave = np.reshape(thetasave[40:thetasave.shape[1],:,:], (-1, thetac.shape[1]))
     theta = thetasave[np.random.choice(range(0, thetasave.shape[0]),
