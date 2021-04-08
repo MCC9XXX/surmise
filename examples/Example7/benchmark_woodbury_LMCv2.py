@@ -7,9 +7,13 @@ from ml_methods import fit_logisticRegression
 from surmise.emulation import emulator
 from surmise.calibration import calibrator
 from visualization_tools import boxplot_compare
-from visualization_tools import plot_pred_interval
 from visualization_tools import plot_model_data
 from visualization_tools import plot_pred_errors
+from additional_visualization import plot_classification_prob
+from additional_visualization import plot_loglikelihood
+from additional_visualization import log_likelihood
+from additional_visualization import plot_adjustedlikelihood
+
 # Read data 
 real_data = np.loadtxt('real_observations.csv', delimiter=',')
 description = np.loadtxt('observation_description.csv', delimiter=',',dtype='object')
@@ -17,7 +21,7 @@ param_values = np.loadtxt('param_values.csv', delimiter=',')
 func_eval = np.loadtxt('func_eval.csv', delimiter=',')
 
 # Get the random sample of 100
-rndsample = sample(range(0, 2000), 500)
+rndsample = sample(range(0, 1000), 1000)
 func_eval_rnd = func_eval[rndsample, :]
 param_values_rnd = param_values[rndsample, :]
 
@@ -60,39 +64,38 @@ emulator_f_PCGPwM = emulator(x=x,
 
     
 # Define a class for prior of 10 parameters
-class prior_covid:
-    """ This defines the class instance of priors provided to the method. """
-    #sps.uniform.logpdf(theta[:, 0], 3, 4.5)
-    def lpdf(theta):
-        return (sps.beta.logpdf((theta[:, 0]-1)/4, 3,3) +
-                sps.beta.logpdf((theta[:, 1]-0.1)/4.9, 3,3) +
-                sps.beta.logpdf((theta[:, 2]-1)/6, 3,3) +
-                sps.beta.logpdf((theta[:, 3]-1)/6, 3,3)).reshape((len(theta), 1))
-    def rnd(n):
-        return np.vstack((1+4*sps.beta.rvs(3,3, size=n),
-                          0.1+4.9*sps.beta.rvs(3,3, size=n),
-                          1+6*sps.beta.rvs(3,3, size=n),
-                          1+6*sps.beta.rvs(3,3, size=n))).T
-
 # class prior_covid:
 #     """ This defines the class instance of priors provided to the method. """
 #     #sps.uniform.logpdf(theta[:, 0], 3, 4.5)
 #     def lpdf(theta):
-#         return (sps.uniform.logpdf(theta[:, 0], 1, 4) +
-#                 sps.uniform.logpdf(theta[:, 1], 0.1, 4.9) +
-#                 sps.uniform.logpdf(theta[:, 2], 1, 6) +
-#                 sps.uniform.logpdf(theta[:, 3], 1, 6)).reshape((len(theta), 1))
+#         return (sps.beta.logpdf((theta[:, 0]-1)/4, 3,3) +
+#                 sps.beta.logpdf((theta[:, 1]-0.1)/4.9, 3,3) +
+#                 sps.beta.logpdf((theta[:, 2]-1)/6, 3,3) +
+#                 sps.beta.logpdf((theta[:, 3]-1)/6, 3,3)).reshape((len(theta), 1))
 #     def rnd(n):
-#         return np.vstack((sps.uniform.rvs(1, 4, size=n),
-#                           sps.uniform.rvs(0.1, 4.9, size=n),
-#                           sps.uniform.rvs(1, 6, size=n),
-#                           sps.uniform.rvs(1, 6, size=n))).T
+#         return np.vstack((1+4*sps.beta.rvs(3,3, size=n),
+#                           0.1+4.9*sps.beta.rvs(3,3, size=n),
+#                           1+6*sps.beta.rvs(3,3, size=n),
+#                           1+6*sps.beta.rvs(3,3, size=n))).T
+
+class prior_covid:
+    """ This defines the class instance of priors provided to the method. """
+    #sps.uniform.logpdf(theta[:, 0], 3, 4.5)
+    def lpdf(theta):
+        return (sps.uniform.logpdf(theta[:, 0], 1, 4) +
+                sps.uniform.logpdf(theta[:, 1], 0.1, 4.9) +
+                sps.uniform.logpdf(theta[:, 2], 1, 6) +
+                sps.uniform.logpdf(theta[:, 3], 1, 6)).reshape((len(theta), 1))
+    def rnd(n):
+        return np.vstack((sps.uniform.rvs(1, 4, size=n),
+                          sps.uniform.rvs(0.1, 4.9, size=n),
+                          sps.uniform.rvs(1, 6, size=n),
+                          sps.uniform.rvs(1, 6, size=n))).T
     
 # Fit a classification model
 classification_model = fit_logisticRegression(func_eval, param_values, T0, T1)
 
 obsvar = 0.01*real_data_tr
-
 
 cal_f = calibrator(emu = emulator_f_PCGPwM,
                    y = np.sqrt(real_data_tr),
@@ -105,7 +108,6 @@ cal_f = calibrator(emu = emulator_f_PCGPwM,
 
 #plot_pred_interval(cal_f, xtr, np.sqrt(real_data_tr))
 cal_f_theta = cal_f.theta.rnd(500)
-#boxplot_param(cal_f_theta)
 plot_pred_errors(cal_f, xtest, np.sqrt(real_data_test))
 
 
@@ -121,8 +123,10 @@ cal_f_ml = calibrator(emu = emulator_f_PCGPwM,
 
 #plot_pred_interval(cal_f_ml, xtr, np.sqrt(real_data_tr))
 cal_f_ml_theta = cal_f_ml.theta.rnd(500)
-#boxplot_param(cal_f_ml_theta)
 plot_pred_errors(cal_f_ml, xtest, np.sqrt(real_data_test))
 
 boxplot_compare(cal_f_theta, cal_f_ml_theta)
-print('script done!!!!!!!')
+
+plot_classification_prob(prior_covid, cal_f_ml_theta, classification_model)
+plot_loglikelihood(prior_covid, cal_f_ml_theta, obsvar, emulator_f_PCGPwM, real_data_tr, xtr, log_likelihood)
+plot_adjustedlikelihood(prior_covid, cal_f_ml_theta, obsvar, emulator_f_PCGPwM, real_data_tr, xtr, log_likelihood, classification_model)
