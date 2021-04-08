@@ -54,6 +54,7 @@ def sampler(logpostfunc, options):
     numchain = 16
     fractunning = 0.5
     sampperchain = 400
+    numopt = 10
     ###
 
     samptunning = np.ceil(sampperchain*fractunning).astype('int')
@@ -101,16 +102,12 @@ def sampler(logpostfunc, options):
         rho = 2 / theta0.shape[1] ** (1/6)
         taracc = 0.60
 
-
-    thetaop = theta0[:10, :]
-    thetastart = theta0
     thetac = np.mean(theta0, 0)
     thetas = np.maximum(np.std(theta0, 0), 10 ** (-8) * np.std(theta0))
 
-
     theta0 = shrinkaroundcenter(theta0, logpostf_nograd)
 
-
+    # begin preoptimizer
     thetac = np.mean(theta0, 0)
     thetas = np.maximum(np.std(theta0, 0), 10 ** (-8) * np.std(theta0))
     def neglogpostf_nograd(thetap):
@@ -120,16 +117,13 @@ def sampler(logpostfunc, options):
         def neglogpostf_grad(thetap):
             theta = thetac + thetas * thetap
             return -thetas * logpostf_grad(theta.reshape((1, len(theta))))
-
     boundL = np.maximum(-10*np.ones(theta0.shape[1]),
                         np.min((theta0 - thetac)/thetas, 0))
     boundU = np.minimum(10*np.ones(theta0.shape[1]),
                         np.max((theta0 - thetac)/thetas, 0))
     bounds = spo.Bounds(boundL, boundU)
-
-    # begin preoptimizer
-    thetaop = np.zeros((10,thetaop.shape[1]))
-    for k in range(0, 10):
+    thetaop = np.zeros((numopt,theta0.shape[1]))
+    for k in range(0, numopt):
         if logpostf_grad is None:
             opval = spo.minimize(neglogpostf_nograd,
                                  (thetaop[k, :] - thetac) / thetas,
@@ -145,13 +139,14 @@ def sampler(logpostfunc, options):
             thetaop[k, :] = thetac + thetas * opval.x
     # end Preoptimizer
 
+    #shrink using optimal points as well
     theta0 = np.vstack((theta0,thetaop))
     theta0 = shrinkaroundcenter(theta0, logpostf_nograd)
-
     thetas = np.maximum(np.std(theta0, 0), 10 ** (-8) * np.std(theta0))
-
     thetac = theta0[np.random.choice(range(0, theta0.shape[0]),
                                         size=totnumchain), :]
+    #done shrink
+
     if logpostf_grad is not None:
         fval, dfval = logpostf(thetac)
         fval = fval/temps
@@ -159,7 +154,6 @@ def sampler(logpostfunc, options):
     else:
         fval = logpostf_nograd(thetac)
         fval = fval/temps
-
 
     thetasave = np.zeros((numchain,
                           sampperchain,
@@ -175,7 +169,6 @@ def sampler(logpostfunc, options):
         rvalo = np.random.normal(0, 1, thetac.shape)
         rval = np.sqrt(2) * adjrho * (rvalo @ hc)
         thetap = thetac + rval
-
         if logpostf_grad is not None:
             diffval = (adjrho ** 2) * (dfval @ covmat0)
             thetap += diffval
