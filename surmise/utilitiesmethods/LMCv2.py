@@ -48,9 +48,22 @@ def sampler(logpostfunc, options):
         numsamp = options['numsamp']
     else:
         numsamp = 2000
+    ###These are parameters we might want to give to the user
+    maxtemp = 128
+    numtemps = 32
+    numchain = 16
+    fractunning = 0.5
+    sampperchain = 400
+    ###
 
-    # Minimum effective sample size (ESS) desired in the returned samples
-    tarESS = np.max((150, 10 * theta0.shape[1]))
+    samptunning = np.ceil(sampperchain*fractunning).astype('int')
+    totnumchain = numtemps+numchain
+    temps = np.concatenate((np.exp(np.linspace(np.log(maxtemp),
+                                               np.log(maxtemp)/(numtemps+1),
+                                               numtemps)),
+                            np.ones(numchain)))#the ratio idea tend from emcee
+    temps = np.array(temps,ndmin=2).T
+
 
     # Test
     testout = logpostfunc(theta0[0:2, :])
@@ -136,18 +149,9 @@ def sampler(logpostfunc, options):
     theta0 = shrinkaroundcenter(theta0, logpostf_nograd)
 
     thetas = np.maximum(np.std(theta0, 0), 10 ** (-8) * np.std(theta0))
-    covmat0 = np.diag(thetas)
-
-    temps =np.concatenate((np.linspace(10,1,40),np.ones(10)))
-    temps = np.array(temps,ndmin=2).T
-    rho = 1/np.sqrt(theta0.shape[0])
-
-    maxiters = 10
-    numsamppc = 200
-    numchain = 50
 
     thetac = theta0[np.random.choice(range(0, theta0.shape[0]),
-                                        size=numchain), :]
+                                        size=totnumchain), :]
     if logpostf_grad is not None:
         fval, dfval = logpostf(thetac)
         fval = fval/temps
@@ -157,21 +161,17 @@ def sampler(logpostfunc, options):
         fval = fval/temps
 
 
-    thetasave = np.zeros((numchain, numsamppc, thetac.shape[1]))
-    numtimes = 0
+    thetasave = np.zeros((numchain,
+                          sampperchain,
+                          thetac.shape[1]))
     hc = np.diag(thetas)
     covmat0 = np.diag(thetas**2)
 
-
-    numtimes = 0
     tau = -1
     rho = 2 * (1 + (np.exp(2 * tau) - 1) / (np.exp(2 * tau) + 1))
     adjrho = rho*temps**(1/3)
-    #autotune
-
-    tunesteps = 100
     numtimes = 0
-    for k in range(0, 100+numsamppc):
+    for k in range(0, samptunning+sampperchain):
         rvalo = np.random.normal(0, 1, thetac.shape)
         rval = np.sqrt(2) * adjrho * (rvalo @ hc)
         thetap = thetac + rval
@@ -194,12 +194,12 @@ def sampler(logpostfunc, options):
                              < np.squeeze(fvalp - fval)
                              + np.squeeze(qadj))[0]
         if whereswap.shape[0] > 0:
-            numtimes = numtimes + (whereswap.shape[0]/numchain)
+            numtimes = numtimes + (whereswap.shape[0]/(fval.shape[0]))
             thetac[whereswap, :] = 1*thetap[whereswap, :]
             fval[whereswap] = 1*fvalp[whereswap]
             if logpostf_grad is not None:
                 dfval[whereswap, :] = 1*dfvalp[whereswap, :]
-        for rt in range(1,numchain):
+        for rt in range(1,totnumchain):
             rhoh = temps[rt-1]/temps[rt]
             if((fval[rt-1]*(rhoh-1)+fval[rt]*(1/rhoh-1))>
                 np.log(np.random.uniform(size=1))):
@@ -213,16 +213,16 @@ def sampler(logpostfunc, options):
                     dfvaltemp = temps[rt- 1]/temps[rt ]  * dfval[rt - 1,:]
                     dfval[rt-1,:] = temps[rt ] / temps[rt- 1] * dfval[rt,:]
                     dfval[rt,:] = 1*dfvaltemp
-        if (k < tunesteps) and (k % 5 == 0):
+        if (k < samptunning) and (k % 5 == 0):
             tau = tau + 1 / np.sqrt(1 + k/5) * \
                   ((numtimes / 5) - taracc)
             rho = 2 * (1 + (np.exp(2 * tau) - 1) / (np.exp(2 * tau) + 1))
             adjrho = rho*(temps**(1/3))
             numtimes = 0
-        elif(k >= tunesteps):
-            thetasave[:, k-tunesteps, :] = 1 * thetac
+        elif(k >= samptunning):
+            thetasave[:, k-samptunning, :] = 1 * thetac[numtemps:,]
 
-    thetasave = np.reshape(thetasave[40:thetasave.shape[1],:,:], (-1, thetac.shape[1]))
+    thetasave = np.reshape(thetasave,(-1, thetac.shape[1]))
     theta = thetasave[np.random.choice(range(0, thetasave.shape[0]),
                                        size=numsamp), :]
     sampler_info = {'theta': theta, 'logpost': logpostf_nograd(theta)}
