@@ -48,8 +48,13 @@ def sampler(logpostfunc, options):
         numsamp = options['numsamp']
     else:
         numsamp = 2000
+
+    if 'maxtemp' in options.keys():
+        maxtemp = options['maxtemp']
+    else:
+        maxtemp = 30
+
     ###These are parameters we might want to give to the user
-    maxtemp = 128
     numtemps = 32
     numchain = 16
     fractunning = 0.5

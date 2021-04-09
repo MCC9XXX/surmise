@@ -30,9 +30,10 @@ def plot_classification_prob(prior_covid, samples, classification_model):
                 for j in range(i, 4):
                     ml_sample = np.concatenate([ml_sample, np.reshape(ml_sample[:, i] * ml_sample[:, j], (n, 1))], axis = 1)
                         
-            yp = classification_model.predict_proba(ml_sample)[:, 1] 
+            yp = np.log(classification_model.predict_proba(ml_sample)[:, 1])
                
-            scatter = axs[id_j-1,id_i].scatter(ml_sample[:,id_i], ml_sample[:,id_j], c=yp, vmin=0, vmax=1, cmap="Spectral")
+            scatter = axs[id_j-1,id_i].scatter(ml_sample[:,id_i], ml_sample[:,id_j], c=yp,
+                                               vmin=np.min(yp), vmax=np.max(yp), cmap="Spectral")
             legend1 = axs[id_j-1,id_i].legend(*scatter.legend_elements(num=5),
                                 loc="upper left", title="Ranking")
             axs[id_j-1,id_i].add_artist(legend1)
@@ -126,7 +127,7 @@ def plot_loglikelihood(prior_covid, samples, obsvar, emulator_f_PCGPwM, real_dat
             #yp = np.max(yp)/yp
             scatter = axs[id_j-1,id_i].scatter(ml_sample[:,id_i], ml_sample[:,id_j], c=yp, cmap="Spectral")
             legend1 = axs[id_j-1,id_i].legend(*scatter.legend_elements(num=5),
-                                loc="upper left", title="Ranking")
+                                loc="upper left", title="log-prob")
             axs[id_j-1,id_i].add_artist(legend1)
     
     labels = [r'$\theta_1$', r'$\theta_2$', r'$\theta_3$', r'$\theta_4$']
@@ -181,7 +182,7 @@ def plot_adjustedlikelihood(prior_covid, samples, obsvar, emulator_f_PCGPwM, rea
 
             scatter = axs[id_j-1,id_i].scatter(ml_sample[:,id_i], ml_sample[:,id_j], c=pp, cmap="Spectral")
             legend1 = axs[id_j-1,id_i].legend(*scatter.legend_elements(num=5),
-                                loc="upper left", title="Ranking")
+                                loc="upper left", title="log-lik")
             axs[id_j-1,id_i].add_artist(legend1)
     
     labels = [r'$\theta_1$', r'$\theta_2$', r'$\theta_3$', r'$\theta_4$']
