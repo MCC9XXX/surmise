@@ -104,7 +104,7 @@ cal_f = calibrator(emu = emulator_f_PCGPwM,
                    method = 'mlbayeswoodbury',
                    yvar = obsvar,
                    args = {'usedir': True,
-                           'sampler':'LMCv2'})
+                           'sampler':'PTLMC'})
 
 #plot_pred_interval(cal_f, xtr, np.sqrt(real_data_tr))
 cal_f_theta = cal_f.theta.rnd(500)
@@ -119,7 +119,7 @@ cal_f_ml = calibrator(emu = emulator_f_PCGPwM,
                    yvar = obsvar,
                    args = {'usedir': True,
                            'clf_method': classification_model, 
-                           'sampler':'LMCv2'})
+                           'sampler':'PTLMC'})
 
 #plot_pred_interval(cal_f_ml, xtr, np.sqrt(real_data_tr))
 cal_f_ml_theta = cal_f_ml.theta.rnd(500)

@@ -172,7 +172,7 @@ def fit(fitinfo, emu, x, y,  args=None):
         theta = np.vstack((theta, copy.copy(emu._emulator__theta)))
 
     # obtain theta draws from posterior distribution
-    if args['sampler'] == 'LMCv2':
+    if args['sampler'] == 'PTLMC':
         args['theta0'] = theta
         sampler_obj = sampler(logpostfunc=logpostfull_wgrad, options=args)
         theta = sampler_obj.sampler_info['theta']
