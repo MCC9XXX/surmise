@@ -4,10 +4,9 @@ import matplotlib.pyplot as plt
 def plot_classification_prob(prior_covid, samples, classification_model):
     fig, axs = plt.subplots(3, 3, figsize=(12, 12))
     n = 5000
-    
+    plt.xticks(fontsize=16)
     for i in range(2):
         for j in range(i+1, 3):
-            print(i)
             axs[i, j].get_xaxis().set_visible(False)
             axs[i, j].get_yaxis().set_visible(False)
             axs[i, j].yaxis.set_ticklabels([])
@@ -32,20 +31,29 @@ def plot_classification_prob(prior_covid, samples, classification_model):
                         
             yp = np.log(classification_model.predict_proba(ml_sample)[:, 1])
                
-            scatter = axs[id_j-1,id_i].scatter(ml_sample[:,id_i], ml_sample[:,id_j], c=yp,
-                                               vmin=np.min(yp), vmax=np.max(yp), cmap="Spectral")
+            scatter = axs[id_j-1,id_i].scatter(ml_sample[:,id_i],
+                                               ml_sample[:,id_j],
+                                               c=yp,
+                                               vmin=np.min(yp),
+                                               vmax=np.max(yp),
+                                               cmap="Spectral")
             legend1 = axs[id_j-1,id_i].legend(*scatter.legend_elements(num=5),
-                                loc="upper left", title="Ranking")
+                                loc="lower right")
             axs[id_j-1,id_i].add_artist(legend1)
+            axs[id_j-1,id_i].tick_params(axis='x', labelsize= 16)
+            axs[id_j-1,id_i].tick_params(axis='y', labelsize= 16)
+    #labels = [r'$\theta_1$', r'$\theta_2$', r'$\theta_3$', r'$\theta_4$']
+    labels = [r'$\sigma$', r'$\omega_A$', r'$\gamma_Y$', r'$\gamma_A$']
+    axs[0, 0].set_ylabel(labels[1], fontsize=16)
+    axs[1, 0].set_ylabel(labels[2], fontsize=16)
+    axs[2, 0].set_ylabel(labels[3], fontsize=16)
     
-    labels = [r'$\theta_1$', r'$\theta_2$', r'$\theta_3$', r'$\theta_4$']
-    axs[0, 0].set_ylabel(labels[1], fontsize=12)
-    axs[1, 0].set_ylabel(labels[2], fontsize=12)
-    axs[2, 0].set_ylabel(labels[3], fontsize=12)
-    
-    axs[2, 0].set_xlabel(labels[0], fontsize=12)
-    axs[2, 1].set_xlabel(labels[1], fontsize=12)
-    axs[2, 2].set_xlabel(labels[2], fontsize=12)
+    axs[2, 0].set_xlabel(labels[0], fontsize=16)
+    axs[2, 1].set_xlabel(labels[1], fontsize=16)
+    axs[2, 2].set_xlabel(labels[2], fontsize=16)
+    #fig.tight_layout(pad=10.0)
+
+    #plt.subplots_adjust(wspace = 0.5)
     plt.show()
 
 
@@ -127,17 +135,21 @@ def plot_loglikelihood(prior_covid, samples, obsvar, emulator_f_PCGPwM, real_dat
             #yp = np.max(yp)/yp
             scatter = axs[id_j-1,id_i].scatter(ml_sample[:,id_i], ml_sample[:,id_j], c=yp, cmap="Spectral")
             legend1 = axs[id_j-1,id_i].legend(*scatter.legend_elements(num=5),
-                                loc="upper left", title="log-prob")
+                                loc="lower right")
             axs[id_j-1,id_i].add_artist(legend1)
+            axs[id_j-1,id_i].tick_params(axis='x', labelsize= 16)
+            axs[id_j-1,id_i].tick_params(axis='y', labelsize= 16)
     
-    labels = [r'$\theta_1$', r'$\theta_2$', r'$\theta_3$', r'$\theta_4$']
-    axs[0, 0].set_ylabel(labels[1], fontsize=12)
-    axs[1, 0].set_ylabel(labels[2], fontsize=12)
-    axs[2, 0].set_ylabel(labels[3], fontsize=12)
+    labels = [r'$\sigma$', r'$\omega_A$', r'$\gamma_Y$', r'$\gamma_A$']
+    axs[0, 0].set_ylabel(labels[1], fontsize=16)
+    axs[1, 0].set_ylabel(labels[2], fontsize=16)
+    axs[2, 0].set_ylabel(labels[3], fontsize=16)
     
-    axs[2, 0].set_xlabel(labels[0], fontsize=12)
-    axs[2, 1].set_xlabel(labels[1], fontsize=12)
-    axs[2, 2].set_xlabel(labels[2], fontsize=12)
+    axs[2, 0].set_xlabel(labels[0], fontsize=16)
+    axs[2, 1].set_xlabel(labels[1], fontsize=16)
+    axs[2, 2].set_xlabel(labels[2], fontsize=16)
+    
+    #plt.subplots_adjust(wspace = 0.5)
     plt.show()
 
 

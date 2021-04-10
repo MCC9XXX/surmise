@@ -177,14 +177,14 @@ def sampler(logpostfunc, options):
         if logpostf_grad is not None:
             diffval = (adjrho ** 2) * (dfval @ covmat0)
             thetap += diffval
-            fvalp, dfvalp = logpostf(thetap)
-            fvalp = fvalp / temps
+            fvalp, dfvalp = logpostf(thetap)  # thetap : no chain x dimension
+            fvalp = fvalp / temps # to flatter the posterior
             dfvalp = dfvalp / temps
             term1 = rvalo / np.sqrt(2)
             term2 = (adjrho / 2) * ((dfval + dfvalp) @ hc)
             qadj = -(2 * np.sum(term1 * term2, 1) + np.sum(term2**2, 1))
         else:
-            fvalp = logpostf_nograd(thetap)
+            fvalp = logpostf_nograd(thetap) # thetap : no chain x dimension
             fvalp = fvalp / temps
             qadj = np.zeros(fvalp.shape)
         swaprnd = np.log(np.random.uniform(size=fval.shape[0]))
@@ -211,13 +211,13 @@ def sampler(logpostfunc, options):
                     dfvaltemp = temps[rt- 1]/temps[rt ]  * dfval[rt - 1,:]
                     dfval[rt-1,:] = temps[rt ] / temps[rt- 1] * dfval[rt,:]
                     dfval[rt,:] = 1*dfvaltemp
-        if (k < samptunning) and (k % 5 == 0):
+        if (k < samptunning) and (k % 5 == 0): # if we are not done with tuning
             tau = tau + 1 / np.sqrt(1 + k/5) * \
                   ((numtimes / 5) - taracc)
             rho = 2 * (1 + (np.exp(2 * tau) - 1) / (np.exp(2 * tau) + 1))
             adjrho = rho*(temps**(1/3))
             numtimes = 0
-        elif(k >= samptunning):
+        elif(k >= samptunning): # if we are done with tuning
             thetasave[:, k-samptunning, :] = 1 * thetac[numtemps:,]
 
     thetasave = np.reshape(thetasave,(-1, thetac.shape[1]))
