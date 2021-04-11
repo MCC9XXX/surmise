@@ -30,12 +30,12 @@ def plot_classification_prob(prior_covid, samples, classification_model):
                     ml_sample = np.concatenate([ml_sample, np.reshape(ml_sample[:, i] * ml_sample[:, j], (n, 1))], axis = 1)
                         
             yp = np.log(classification_model.predict_proba(ml_sample)[:, 1])
-               
+            yp -= np.max(yp)
             scatter = axs[id_j-1,id_i].scatter(ml_sample[:,id_i],
                                                ml_sample[:,id_j],
                                                c=yp,
-                                               vmin=np.min(yp),
-                                               vmax=np.max(yp),
+                                               vmin=-20,
+                                               vmax=0,
                                                cmap="Spectral")
             legend1 = axs[id_j-1,id_i].legend(*scatter.legend_elements(num=5),
                                 loc="lower right")
@@ -131,9 +131,12 @@ def plot_loglikelihood(prior_covid, samples, obsvar, emulator_f_PCGPwM, real_dat
             yp = np.zeros((n))
             for i in range(n):
                 yp[i] = log_likelihood(ml_sample[i,:], obsvar, emulator_f_PCGPwM, np.sqrt(real_data_tr), xtr)
-               
-            #yp = np.max(yp)/yp
-            scatter = axs[id_j-1,id_i].scatter(ml_sample[:,id_i], ml_sample[:,id_j], c=yp, cmap="Spectral")
+
+            yp -= np.max(yp)
+            scatter = axs[id_j-1,id_i].scatter(ml_sample[:,id_i], ml_sample[:,id_j], c=yp,
+                                               vmin=-400,
+                                               vmax=0,
+                                               cmap="Spectral")
             legend1 = axs[id_j-1,id_i].legend(*scatter.legend_elements(num=5),
                                 loc="lower right")
             axs[id_j-1,id_i].add_artist(legend1)
