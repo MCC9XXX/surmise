@@ -26,7 +26,7 @@ func_eval_rnd = func_eval[rndsample, :]
 param_values_rnd = param_values[rndsample, :]
 
 # (No Filter) Observe computer model outputs
-plot_model_data(description, np.sqrt(func_eval_rnd), np.sqrt(real_data), param_values_rnd)
+plot_model_data(description, func_eval_rnd, real_data, param_values_rnd)
 
 # Filter out the data
 T0 = 50
@@ -42,7 +42,7 @@ func_eval_in = func_eval_rnd[np.logical_and.reduce((func_eval_rnd[:, 25] < 350,
                                                     func_eval_rnd[:, 100] < T1)), :]
 
 # (Filter) Observe computer model outputs
-plot_model_data(description, np.sqrt(func_eval_in), np.sqrt(real_data), par_in)
+plot_model_data(description, func_eval_in, real_data, par_in)
 
 # Get the x values
 keeptimepoints = np.arange(10, description.shape[0], step=5)
@@ -61,23 +61,36 @@ emulator_f_PCGPwM = emulator(x=x,
                              f=(func_eval_in)**(0.5),
                              method='PCGPwM')
 
+############# THIS PART IS FOR THE PAPER #############
+# (No Filter) Fit an emulator via 'PCGP'
+emulator_nf_PCGPwM = emulator(x=x,
+                              theta=param_values_rnd,
+                              f=(func_eval_rnd)**(0.5),
+                              method='PCGPwM')
 
-    
-# Define a class for prior of 10 parameters
-# class prior_covid:
-#     """ This defines the class instance of priors provided to the method. """
-#     #sps.uniform.logpdf(theta[:, 0], 3, 4.5)
-#     def lpdf(theta):
-#         return (sps.beta.logpdf((theta[:, 0]-1)/4, 3,3) +
-#                 sps.beta.logpdf((theta[:, 1]-0.1)/4.9, 3,3) +
-#                 sps.beta.logpdf((theta[:, 2]-1)/6, 3,3) +
-#                 sps.beta.logpdf((theta[:, 3]-1)/6, 3,3)).reshape((len(theta), 1))
-#     def rnd(n):
-#         return np.vstack((1+4*sps.beta.rvs(3,3, size=n),
-#                           0.1+4.9*sps.beta.rvs(3,3, size=n),
-#                           1+6*sps.beta.rvs(3,3, size=n),
-#                           1+6*sps.beta.rvs(3,3, size=n))).T
+rndsample = sample(range(1000, 2000), 1000)
+func_eval_test = func_eval[rndsample, :]
+param_values_test = param_values[rndsample, :]
 
+param_values_test = param_values_test[np.logical_and.reduce((func_eval_test[:, 25] < 350,
+                                                             func_eval_test[:, 100] > T0,
+                                                             func_eval_test[:, 100] < T1)), :]
+func_eval_test = func_eval_test[np.logical_and.reduce((func_eval_test[:, 25] < 350,
+                                                       func_eval_test[:, 100] > T0,
+                                                       func_eval_test[:, 100] < T1)), :]
+func_eval_test = (func_eval_test.T)**(0.5)
+
+ftest_mean = emulator_f_PCGPwM.predict(x=x, theta=param_values_test).mean()
+nftest_mean = emulator_nf_PCGPwM.predict(x=x, theta=param_values_test).mean()
+
+print(ftest_mean.shape)
+print(nftest_mean.shape)
+print(func_eval_test.shape)
+
+print(np.sqrt(np.mean((ftest_mean - func_eval_test)**2)))
+print(np.sqrt(np.mean((nftest_mean - func_eval_test)**2)))
+
+#############  #############
 class prior_covid:
     """ This defines the class instance of priors provided to the method. """
     #sps.uniform.logpdf(theta[:, 0], 3, 4.5)
@@ -131,11 +144,11 @@ boxplot_compare(cal_f_theta, cal_f_ml_theta)
 
 plot_classification_prob(prior_covid, cal_f_ml_theta, classification_model)
 plot_loglikelihood(prior_covid, cal_f_ml_theta, obsvar, emulator_f_PCGPwM, real_data_tr, xtr, log_likelihood)
-plot_adjustedlikelihood(prior_covid,
-                        cal_f_ml_theta,
-                        obsvar,
-                        emulator_f_PCGPwM,
-                        real_data_tr,
-                        xtr,
-                        log_likelihood,
-                        classification_model)
+# plot_adjustedlikelihood(prior_covid,
+#                         cal_f_ml_theta,
+#                         obsvar,
+#                         emulator_f_PCGPwM,
+#                         real_data_tr,
+#                         xtr,
+#                         log_likelihood,
+#                         classification_model)
