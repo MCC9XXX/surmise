@@ -1,5 +1,4 @@
 # comparison via LMC
-breakpoint()
 import numpy as np
 from random import sample
 import scipy.stats as sps
@@ -120,7 +119,6 @@ cal_f = calibrator(emu = emulator_f_PCGPwM,
                            'sampler':'PTLMC',
                            'maxtemp': 20})
 
-#plot_pred_interval(cal_f, xtr, np.sqrt(real_data_tr))
 cal_f_theta = cal_f.theta.rnd(500)
 plot_pred_errors(cal_f, xtest, np.sqrt(real_data_test))
 
@@ -136,7 +134,6 @@ cal_f_ml = calibrator(emu = emulator_f_PCGPwM,
                            'sampler':'PTLMC',
                            'maxtemp': 20})
 
-#plot_pred_interval(cal_f_ml, xtr, np.sqrt(real_data_tr))
 cal_f_ml_theta = cal_f_ml.theta.rnd(500)
 plot_pred_errors(cal_f_ml, xtest, np.sqrt(real_data_test))
 
@@ -144,11 +141,3 @@ boxplot_compare(cal_f_theta, cal_f_ml_theta)
 
 plot_classification_prob(prior_covid, cal_f_ml_theta, classification_model)
 plot_loglikelihood(prior_covid, cal_f_ml_theta, obsvar, emulator_f_PCGPwM, real_data_tr, xtr, log_likelihood)
-# plot_adjustedlikelihood(prior_covid,
-#                         cal_f_ml_theta,
-#                         obsvar,
-#                         emulator_f_PCGPwM,
-#                         real_data_tr,
-#                         xtr,
-#                         log_likelihood,
-#                         classification_model)
