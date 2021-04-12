@@ -37,11 +37,13 @@ def plot_classification_prob(prior_covid, samples, classification_model):
                                                vmin=-20,
                                                vmax=0,
                                                cmap="Spectral")
-            legend1 = axs[id_j-1,id_i].legend(*scatter.legend_elements(num=5),
-                                loc="lower right")
-            axs[id_j-1,id_i].add_artist(legend1)
+            #legend1 = axs[id_j-1,id_i].legend(*scatter.legend_elements(num=5),
+            #                    loc="lower right")
+            #axs[id_j-1,id_i].add_artist(legend1)
             axs[id_j-1,id_i].tick_params(axis='x', labelsize= 16)
             axs[id_j-1,id_i].tick_params(axis='y', labelsize= 16)
+    
+    fig.colorbar(scatter, ax=axs[:,:])
     #labels = [r'$\theta_1$', r'$\theta_2$', r'$\theta_3$', r'$\theta_4$']
     labels = [r'$\sigma$', r'$\omega_A$', r'$\gamma_Y$', r'$\gamma_A$']
     axs[0, 0].set_ylabel(labels[1], fontsize=16)
@@ -137,12 +139,13 @@ def plot_loglikelihood(prior_covid, samples, obsvar, emulator_f_PCGPwM, real_dat
                                                vmin=-400,
                                                vmax=0,
                                                cmap="Spectral")
-            legend1 = axs[id_j-1,id_i].legend(*scatter.legend_elements(num=5),
-                                loc="lower right")
-            axs[id_j-1,id_i].add_artist(legend1)
+            #legend1 = axs[id_j-1,id_i].legend(*scatter.legend_elements(num=5),
+            #                    loc="lower right")
+            #axs[id_j-1,id_i].add_artist(legend1)
             axs[id_j-1,id_i].tick_params(axis='x', labelsize= 16)
             axs[id_j-1,id_i].tick_params(axis='y', labelsize= 16)
     
+    fig.colorbar(scatter, ax=axs[:,:])
     labels = [r'$\sigma$', r'$\omega_A$', r'$\gamma_Y$', r'$\gamma_A$']
     axs[0, 0].set_ylabel(labels[1], fontsize=16)
     axs[1, 0].set_ylabel(labels[2], fontsize=16)

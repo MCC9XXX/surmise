@@ -1,5 +1,5 @@
 # comparison via LMC
-
+breakpoint()
 import numpy as np
 from random import sample
 import scipy.stats as sps
