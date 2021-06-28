@@ -28,6 +28,10 @@ import matplotlib.pyplot as plt
 from surmise.emulation import emulator
 from surmise.calibration import calibrator
 
+import pyximport
+pyximport.install(setup_args={"include_dirs":np.get_include()},
+                  reload_support=True)
+
 # %% [markdown]
 # We collect the data at two different heights, that are 25 and 50.
 
@@ -193,6 +197,18 @@ def plot_preds(cal, axs):
         axs.plot(xv[inds, 0], y[inds], 'ro', markersize = 5, color='red')
     return(axs)
 
+def graph(calibration, whichtheta, n, method, subplot):
+    fig, axs = plt.subplots(subplot[0],subplot[1], figsize=(14,4))
+    cal_theta = calibration.theta.rnd(n)
+    
+    for i in range(len(method)):
+        if method[i] == 'histogram':
+            axs[i].hist(cal_theta[:, whichtheta])
+            
+        elif method[i] == 'boxplot':
+            axs[i].boxplot(cal_theta[:,whichtheta])
+    plt.show()
+
 
 # %% [markdown]
 # ### Calibrators for Model 1
@@ -240,6 +256,7 @@ plot_theta(cal_grav_1, 0)
 plot_theta(cal_grav_2, 0)
 plot_theta(cal_grav_3, 0)
 plot_theta(cal_grav_4, 0)
+graph(cal_grav_1,0,1000,['histogram','boxplot'],[1,2])
 
 # %%
 fig, axs = plt.subplots(1, 4, figsize=(15, 4))
@@ -300,6 +317,8 @@ plot_theta(cal_lin_1, 0)
 plot_theta(cal_lin_2, 0)
 plot_theta(cal_lin_3, 0)
 plot_theta(cal_lin_4, 0)
+graph(cal_lin_1,0,1000,['histogram','boxplot'],[1,2])
+graph(cal_lin_1,1,1000,['histogram','boxplot'],[1,2])
 
 # %%
 fig, axs = plt.subplots(1, 4, figsize=(15, 4))
