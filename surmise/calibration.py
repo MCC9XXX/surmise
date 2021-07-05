@@ -491,3 +491,43 @@ class thetadist(object):
                                                        args))
         else:
             raise ValueError('lpdf functionality not in method')
+            
+    def plot(self, whichtheta = [0], n = 1000, method = ['histogram'], subplot = [1, 1]):
+        import matplotlib.pyplot as plt 
+        from scipy.stats import gaussian_kde
+        
+        fig, axs = plt.subplots(subplot[0], subplot[1], figsize=(14,4))
+        
+        cal_theta = self.cal.theta.rnd(n)
+        
+            
+        for x in range(len(subplot)):
+            if subplot[x] == 1:
+                for ss in range(len(method)):
+                    for s in range(len(whichtheta)):
+                        if method[ss] == 'histogram':
+                            axs[ss].hist(cal_theta[:,whichtheta[s]])
+                        elif method[ss] == 'boxplot':
+                            axs[ss].boxplot(cal_theta[:,whichtheta[s]])
+                        elif method[ss] == 'density':
+                            density = gaussian_kde(whichtheta[s])
+                            z = np.linspace(0,20)
+                            density.covariance_factor = lambda : .5
+                            density._compute_covariance()
+                            axs[ss].plot(z,density(z))
+            else:
+                for ii in range(len(method)):
+                    for i in range(len(whichtheta)):
+                        if method[ii] == 'histogram':
+                            axs[i,ii].hist(cal_theta[:, whichtheta[i]])
+                        elif method[ii] == 'boxplot':
+                            axs[i,ii].boxplot(cal_theta[:,whichtheta[i]])
+                        elif method[ii] == 'density':
+                            density = gaussian_kde(cal_theta[whichtheta[i]])
+                            z = np.linspace(0,20)
+                            density.covariance_factor = lambda : .5
+                            density._compute_covariance()
+                            axs[i,ii].plot(z,density(z))
+                        
+        plt.show()
+            
