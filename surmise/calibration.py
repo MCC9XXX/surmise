@@ -501,33 +501,39 @@ class thetadist(object):
         cal_theta = self.cal.theta.rnd(n)
         
             
-        for x in range(len(subplot)):
-            if subplot[x] == 1:
+        if subplot[0] or subplot[1] == 1:
+            length = len(method)*len(whichtheta)-1
+            cc = 0;
+            while cc <= length:
                 for ss in range(len(method)):
                     for s in range(len(whichtheta)):
                         if method[ss] == 'histogram':
-                            axs[ss].hist(cal_theta[:,whichtheta[s]])
+                            axs[cc].hist(cal_theta[:,whichtheta[s]])
+                            cc += 1
                         elif method[ss] == 'boxplot':
-                            axs[ss].boxplot(cal_theta[:,whichtheta[s]])
+                                axs[cc].boxplot(cal_theta[:,whichtheta[s]])
+                                cc += 1
                         elif method[ss] == 'density':
-                            density = gaussian_kde(whichtheta[s])
+                            density = gaussian_kde(cal_theta[whichtheta[s]])
                             z = np.linspace(0,20)
                             density.covariance_factor = lambda : .5
                             density._compute_covariance()
-                            axs[ss].plot(z,density(z))
-            else:
-                for ii in range(len(method)):
-                    for i in range(len(whichtheta)):
-                        if method[ii] == 'histogram':
-                            axs[i,ii].hist(cal_theta[:, whichtheta[i]])
-                        elif method[ii] == 'boxplot':
-                            axs[i,ii].boxplot(cal_theta[:,whichtheta[i]])
-                        elif method[ii] == 'density':
-                            density = gaussian_kde(cal_theta[whichtheta[i]])
-                            z = np.linspace(0,20)
-                            density.covariance_factor = lambda : .5
-                            density._compute_covariance()
-                            axs[i,ii].plot(z,density(z))
+                            axs[cc].plot(z,density(z))
+                            cc += 1
+        else:
+            for ii in range(len(method)):
+                for i in range(len(whichtheta)):
+                    if method[ii] == 'histogram':
+                        axs[i,ii].hist(cal_theta[:, whichtheta[i]])
+                    elif method[ii] == 'boxplot':
+                        axs[i,ii].boxplot(cal_theta[:,whichtheta[i]])
+                    elif method[ii] == 'density':
+                        density = gaussian_kde(cal_theta[whichtheta[i]])
+                        z = np.linspace(0,20)
+                        density.covariance_factor = lambda : .5
+                        density._compute_covariance()
+                        axs[i,ii].plot(z,density(z))
+
                         
         plt.show()
             
