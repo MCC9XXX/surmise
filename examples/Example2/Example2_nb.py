@@ -27,7 +27,6 @@ import scipy.stats as sps
 import matplotlib.pyplot as plt 
 from surmise.emulation import emulator
 from surmise.calibration import calibrator
-from scipy.stats import gaussian_kde
 
 import pyximport
 pyximport.install(setup_args={"include_dirs":np.get_include()},
@@ -240,10 +239,16 @@ cal_grav_4 = calibrator(emu=emu_grav,
                         args={'sampler': 'PTLMC'})
 
 # %%
+'''
 plot_theta(cal_grav_1, 0)
 plot_theta(cal_grav_2, 0)
 plot_theta(cal_grav_3, 0)
 plot_theta(cal_grav_4, 0)
+'''
+cal_grav_1.theta.plot(['boxplot', 'histogram'], [[0]])
+cal_grav_2.theta.plot(['boxplot', 'histogram'], [[0]])
+cal_grav_3.theta.plot(['boxplot', 'histogram'], [[0]])
+cal_grav_4.theta.plot(['boxplot', 'histogram'], [[0]])
 
 # %%
 fig, axs = plt.subplots(1, 4, figsize=(15, 4))
@@ -302,11 +307,17 @@ cal_lin_4 = calibrator(emu=emu_lin,
 
 # %%
 # visualize posterior draws for the calibration parameter
+'''
 plot_theta(cal_lin_1, 0)
 plot_theta(cal_lin_2, 0)
 plot_theta(cal_lin_3, 0)
 plot_theta(cal_lin_4, 0)
-cal_lin_1.theta.plot([0,1], 1000, ['boxplot'], [1,2])
+'''
+cal_lin_1.theta.plot(['boxplot', 'histogram'], [[0]])
+cal_lin_2.theta.plot(['boxplot', 'histogram'], [[0]])
+cal_lin_3.theta.plot(['boxplot', 'histogram'], [[0]])
+cal_lin_4.theta.plot(['boxplot', 'histogram'], [[0]])
+cal_lin_1.theta.plot(['boxplot', 'histogram','density'], ["transpose", [0,1]])
 
 # %%
 fig, axs = plt.subplots(1, 4, figsize=(15, 4))
