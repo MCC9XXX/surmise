@@ -3,7 +3,6 @@ import importlib
 import copy
 import warnings
 
-
 class calibrator(object):
 
     def __init__(self,
@@ -263,7 +262,7 @@ class calibrator(object):
             info['rnd'] = (emupred.mean()).T
         return prediction(info, self)
 
-
+            
 class prediction(object):
     '''
     A class to represent a calibration prediction.
@@ -388,6 +387,7 @@ class thetadist(object):
 
     def __init__(self, cal):
         self.cal = cal
+        self.plots = self.plotting(cal)
 
     def __repr__(self):
         object_method = [method_name for method_name in dir(self)
@@ -491,7 +491,21 @@ class thetadist(object):
                                                        args))
         else:
             raise ValueError('lpdf functionality not in method')
-            
+   
+    class plotting:
+        def __init__(self, cal):
+            self.cal = cal
+
+        def traceplot(self, args=None):
+            import matplotlib.pyplot as plt
+            theta = self.cal.info['thetarnd']
+            for t in range(np.shape(theta)[1]):
+                plt.plot(self.cal.info['thetarnd'][:, t])
+                plt.show()
+                
+        
+
+    
     def plot(self, whichtheta = [0], n = 1000, method = ['histogram'], subplot = [1, 1]):
         import matplotlib.pyplot as plt 
         from scipy.stats import gaussian_kde
@@ -536,4 +550,10 @@ class thetadist(object):
 
                         
         plt.show()
+        
+
+        
+    
+    
+    
             

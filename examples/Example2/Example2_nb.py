@@ -268,6 +268,8 @@ cal_lin_1 = calibrator(emu=emu_lin,
                               'stepType': 'normal', 
                               'stepParam': np.array([0.1, 1])})
 
+#breakpoint()
+cal_lin_1.theta.plots.traceplot()
 # %% [markdown]
 # Now, we build a calibrator using a different sampler `LMC`--Langevin Monte Carlo.
 
