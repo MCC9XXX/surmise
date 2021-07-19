@@ -245,10 +245,10 @@ plot_theta(cal_grav_2, 0)
 plot_theta(cal_grav_3, 0)
 plot_theta(cal_grav_4, 0)
 '''
-cal_grav_1.theta.plot(['boxplot', 'histogram'], [[0]])
-cal_grav_2.theta.plot(['boxplot', 'histogram'], [[0]])
-cal_grav_3.theta.plot(['boxplot', 'histogram'], [[0]])
-cal_grav_4.theta.plot(['boxplot', 'histogram'], [[0]])
+cal_grav_1.theta.plots.plot(['boxplot', 'histogram'], [[0]])
+cal_grav_2.theta.plots.plot(['boxplot', 'histogram'], [[0]])
+cal_grav_3.theta.plots.plot(['boxplot', 'histogram'], [[0]])
+cal_grav_4.theta.plots.plot(['boxplot', 'histogram'], [[0]])
 
 # %%
 fig, axs = plt.subplots(1, 4, figsize=(15, 4))
@@ -275,6 +275,7 @@ cal_lin_1 = calibrator(emu=emu_lin,
 
 #breakpoint()
 cal_lin_1.theta.plots.traceplot()
+cal_lin_1.theta.plots.autocorr(6)
 # %% [markdown]
 # Now, we build a calibrator using a different sampler `LMC`--Langevin Monte Carlo.
 
@@ -313,11 +314,11 @@ plot_theta(cal_lin_2, 0)
 plot_theta(cal_lin_3, 0)
 plot_theta(cal_lin_4, 0)
 '''
-cal_lin_1.theta.plot(['boxplot', 'histogram'], [[0]])
-cal_lin_2.theta.plot(['boxplot', 'histogram'], [[0]])
-cal_lin_3.theta.plot(['boxplot', 'histogram'], [[0]])
-cal_lin_4.theta.plot(['boxplot', 'histogram'], [[0]])
-cal_lin_1.theta.plot(['boxplot', 'histogram','density'], ["transpose", [0,1]])
+cal_lin_1.theta.plots.plot(['boxplot', 'histogram'], [[0]])
+cal_lin_2.theta.plots.plot(['boxplot', 'histogram'], [[0]])
+cal_lin_3.theta.plots.plot(['boxplot', 'histogram'], [[0]])
+cal_lin_4.theta.plots.plot(['boxplot', 'histogram'], [[0]])
+cal_lin_1.theta.plots.plot(['boxplot', 'histogram','density'], ["transpose", [0,1]])
 
 # %%
 fig, axs = plt.subplots(1, 4, figsize=(15, 4))
