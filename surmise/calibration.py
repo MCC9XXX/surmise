@@ -586,9 +586,9 @@ class thetadist(object):
                             lab_y = "Number of theta {}s".format(i)          
                             axs[ii,i].set_ylabel(lab_y, fontsize = 12)
                         elif method[ii] == 'density':
-                            density = gaussian_kde(cal_theta[whichtheta[i]])
-                            ll = min(cal_theta[whichtheta[i]]) * 0.9
-                            ul = max(cal_theta[whichtheta[i]]) * 1.1
+                            density = gaussian_kde(cal_theta[:, whichtheta[i]])
+                            ll = min(cal_theta[:, whichtheta[i]]) * 0.9
+                            ul = max(cal_theta[:, whichtheta[i]]) * 1.1
                             z = np.linspace(ll,ul)
                             density.covariance_factor = lambda : .5
                             density._compute_covariance()
@@ -603,27 +603,34 @@ class thetadist(object):
                     for i in range(len(whichtheta)):
                         if method[ii] == 'histogram':
                             axs[i,ii].hist(cal_theta[:, whichtheta[i]])
+                            
                             lab_x = "theta {}".format(i) 
                             axs[i,ii].set_xlabel(lab_x, fontsize = 12)
+                            
                             lab_y = "Number of theta {}s".format(i)          
                             axs[i,ii].set_ylabel(lab_y, fontsize = 12)
                           
                         elif method[ii] == 'boxplot':
-                            axs[i,ii].boxplot(cal_theta[:,whichtheta[i]])
+                            axs[i,ii].boxplot(cal_theta[:, whichtheta[i]])
+                            
                             lab_x = "theta {}".format(i) 
                             axs[i,ii].set_xlabel(lab_x, fontsize = 12)
+                            
                             lab_y = "Number of theta {}s".format(i)          
                             axs[i,ii].set_ylabel(lab_y, fontsize = 12)
+                            
                         elif method[ii] == 'density':
-                            density = gaussian_kde(cal_theta[whichtheta[i]])
-                            ll = min(cal_theta[whichtheta[i]]) * 0.9
-                            ul = max(cal_theta[whichtheta[i]]) * 1.1
+                            density = gaussian_kde(cal_theta[:, whichtheta[i]])
+                            ll = min(cal_theta[:, whichtheta[i]]) * 0.9
+                            ul = max(cal_theta[:, whichtheta[i]]) * 1.1
                             z = np.linspace(ll,ul)
                             density.covariance_factor = lambda : .5
                             density._compute_covariance()
                             axs[i,ii].plot(z,density(z))
+                            
                             lab_x = "theta {}".format(i) 
                             axs[i,ii].set_xlabel(lab_x, fontsize = 12)
+                            
                             lab_y = "Density of theta {}s".format(i)          
                             axs[i,ii].set_ylabel(lab_y, fontsize = 12)
             plt.show()
