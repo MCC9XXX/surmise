@@ -496,12 +496,16 @@ class thetadist(object):
         def __init__(self, cal):
             self.cal = cal
 
-        def traceplot(self, args=None):
+        def traceplot(self, **kwargs):
             import matplotlib.pyplot as plt
             theta = self.cal.info['thetarnd']
-            fig, axs = plt.subplots(1, np.shape(theta)[1])
-            for t in range(np.shape(theta)[1]):
-                axs[t].plot(self.cal.info['thetarnd'][:, t])
+            whichtheta = range(np.shape(theta)[1])
+            if kwargs:
+                for key in kwargs:
+                    key = kwargs[key]
+            fig, axs = plt.subplots(1, len(whichtheta))
+            for t in whichtheta:
+                axs[t].plot(self.cal.info['thetarnd'][:, whichtheta[t]])
             plt.show()
         
         def autocorr(self, lags, args = None):
@@ -511,29 +515,30 @@ class thetadist(object):
             for t in range(np.shape(theta)[1]):
                 axs[t].acorr(self.cal.info['thetarnd'][:,t], maxlags = lags)
             plt.show()
+            
     
             
-        def plot(self, method, args = None):
+        def plot(self, method = ['histogram','boxplot','density'], **kwargs):
             import matplotlib.pyplot as plt 
             from scipy.stats import gaussian_kde
                         
             cal_theta = self.cal.info['thetarnd']
             whichtheta = range(len(cal_theta[0]))
             
+            
             subplot = "default"
-            if args != None:
-                for c in range(len(args)):
-                    if args[c] == "transpose":
-                        subplot = "transpose"
-                    elif type(args[c]) == list:
-                        whichtheta = args[c]
+            
             
             length_w = len(whichtheta)
             length_m = len(method)
+            
+            fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 6,length_m * 3))
+            
+            if kwargs:
+                for key in kwargs:
+                    key = kwargs[key]
             if subplot == "transpose":
-                fig, axs = plt.subplots(length_m, length_w, figsize=(length_m + 10,length_w + 10))
-            else:
-                fig, axs = plt.subplots(length_w, length_m, figsize=(length_w + 16,length_m + 4))
+                fig, axs = plt.subplots(length_m, length_w, figsize=(length_m * 6,length_w * 6))
             
                 
             if length_w == 1 or length_m == 1:
@@ -546,15 +551,11 @@ class thetadist(object):
                                 axs[cc].hist(cal_theta[:,whichtheta[s]])
                                 lab_x = "theta {}".format(cc) 
                                 axs[cc].set_xlabel(lab_x, fontsize = 12)
-                                lab_y = "Number of theta {}s".format(cc)          
-                                axs[cc].set_ylabel(lab_y, fontsize = 12)
                                 cc += 1
                             elif method[ss] == 'boxplot':
                                 axs[cc].boxplot(cal_theta[:,whichtheta[s]])
                                 lab_x = "theta {}".format(cc) 
                                 axs[cc].set_xlabel(lab_x, fontsize = 12)
-                                lab_y = "Number of theta {}s".format(cc)          
-                                axs[cc].set_ylabel(lab_y, fontsize = 12)
                                 cc += 1
                             elif method[ss] == 'density':
                                 density = gaussian_kde(cal_theta[whichtheta[s]])
@@ -566,8 +567,6 @@ class thetadist(object):
                                 axs[cc].plot(z,density(z))
                                 lab_x = "theta {}".format(cc) 
                                 axs[cc].set_xlabel(lab_x, fontsize = 12)
-                                lab_y = "Density of theta {}s".format(cc)          
-                                axs[cc].set_ylabel(lab_y, fontsize = 12)
                                 cc += 1
                     
             elif subplot == "transpose":
@@ -577,14 +576,12 @@ class thetadist(object):
                             axs[ii,i].hist(cal_theta[:, whichtheta[i]])
                             lab_x = "theta {}".format(i) 
                             axs[ii,i].set_xlabel(lab_x, fontsize = 12)
-                            lab_y = "Number of theta {}s".format(i)          
-                            axs[ii,i].set_ylabel(lab_y, fontsize = 12)
+                            
                         elif method[ii] == 'boxplot':
                             axs[ii,i].boxplot(cal_theta[:,whichtheta[i]])
                             lab_x = "theta {}".format(i) 
                             axs[ii,i].set_xlabel(lab_x, fontsize = 12)
-                            lab_y = "Number of theta {}s".format(i)          
-                            axs[ii,i].set_ylabel(lab_y, fontsize = 12)
+                            
                         elif method[ii] == 'density':
                             density = gaussian_kde(cal_theta[whichtheta[i]])
                             ll = min(cal_theta[whichtheta[i]]) * 0.9
@@ -595,8 +592,7 @@ class thetadist(object):
                             axs[ii,i].plot(z,density(z))
                             lab_x = "theta {}".format(i) 
                             axs[ii,i].set_xlabel(lab_x, fontsize = 12)
-                            lab_y = "Density of theta {}s".format(i)          
-                            axs[ii,i].set_ylabel(lab_y, fontsize = 12)
+                            
             
             else:
                 for ii in range(len(method)):
@@ -605,15 +601,13 @@ class thetadist(object):
                             axs[i,ii].hist(cal_theta[:, whichtheta[i]])
                             lab_x = "theta {}".format(i) 
                             axs[i,ii].set_xlabel(lab_x, fontsize = 12)
-                            lab_y = "Number of theta {}s".format(i)          
-                            axs[i,ii].set_ylabel(lab_y, fontsize = 12)
+                            
                           
                         elif method[ii] == 'boxplot':
                             axs[i,ii].boxplot(cal_theta[:,whichtheta[i]])
                             lab_x = "theta {}".format(i) 
                             axs[i,ii].set_xlabel(lab_x, fontsize = 12)
-                            lab_y = "Number of theta {}s".format(i)          
-                            axs[i,ii].set_ylabel(lab_y, fontsize = 12)
+                            
                         elif method[ii] == 'density':
                             density = gaussian_kde(cal_theta[whichtheta[i]])
                             ll = min(cal_theta[whichtheta[i]]) * 0.9
@@ -624,8 +618,7 @@ class thetadist(object):
                             axs[i,ii].plot(z,density(z))
                             lab_x = "theta {}".format(i) 
                             axs[i,ii].set_xlabel(lab_x, fontsize = 12)
-                            lab_y = "Density of theta {}s".format(i)          
-                            axs[i,ii].set_ylabel(lab_y, fontsize = 12)
+                            
             plt.show()
         
 
