@@ -205,7 +205,7 @@ cal_1 = calibrator(emu=emulator_1,
                          'stepType' : 'normal', 
                          'stepParam' : [0.3]})
 
-# plot_pred(x_std, xrep, y, cal_1, theta_range)
+plot_pred(x_std, xrep, y, cal_1, theta_range)
 cal_1.theta.plots.plot(["boxplot","histogram"])
 
 # %%

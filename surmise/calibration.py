@@ -515,7 +515,25 @@ class thetadist(object):
             for t in range(np.shape(theta)[1]):
                 axs[t].acorr(self.cal.info['thetarnd'][:, t], maxlags = lags)
             plt.show()
+        
+        def predictintvr(self,x_std, xrep, y, **kwargs):
+            import matplotlib.pyplot as plt
+            rndm_m = self.cal.info['thetarnd']
+            whichtheta = range(np.shape(rndm_m)[1])
+            if kwargs:
+                for key in kwargs:
+                    key = kwargs[key]
+            fig, axs = plt.subplots(1, len(whichtheta))
+                
+            post = self.cal.predict(x_std)
+            rndm_m = post.rnd(s = 1000)
+            upper = np.percentile(rndm_m, 97.5, axis = 0)
+            lower = np.percentile(rndm_m, 2.5, axis = 0)
+            median = np.percentile(rndm_m, 50, axis = 0)
             
+            axs.plot(xrep[0:21].reshape(21), median, color = 'black')
+            axs.fill_between(xrep[0:21].reshape(21), lower, upper, color = 'grey')
+            axs.plot(xrep, y, 'ro', markersize = 5, color='red')
     
             
         def plot(self, method = ['histogram','boxplot','density'], **kwargs):
