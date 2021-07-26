@@ -502,18 +502,30 @@ class thetadist(object):
             whichtheta = range(np.shape(theta)[1])
             if kwargs:
                 for key in kwargs:
-                    key = kwargs[key]
+                    if key == 'whichtheta':
+                        whichtheta = kwargs[key]
             fig, axs = plt.subplots(1, len(whichtheta))
-            for t in whichtheta:
-                axs[t].plot(self.cal.info['thetarnd'][:, whichtheta[t]])
+            if len(whichtheta) == 1:
+                axs.plot(self.cal.info['thetarnd'][:, whichtheta])
+            else:
+                for t in whichtheta:
+                    axs[t].plot(self.cal.info['thetarnd'][:, whichtheta[t]])
             plt.show()
         
-        def autocorr(self, lags, args = None):
+        def autocorr(self, lags, **kwargs):
             import matplotlib.pyplot as plt
             theta = self.cal.info['thetarnd']
-            fig, axs = plt.subplots(1, np.shape(theta)[1], figsize = (4, np.shape(theta)[1]))
-            for t in range(np.shape(theta)[1]):
-                axs[t].acorr(self.cal.info['thetarnd'][:, t], maxlags = lags)
+            whichtheta = range(np.shape(theta)[1])
+            if kwargs:
+                for key in kwargs:
+                    if key == 'whichtheta':
+                        whichtheta = kwargs[key]
+            fig, axs = plt.subplots(1, len(whichtheta))
+            if len(whichtheta) == 1:
+                axs.acorr(self.cal.info['thetarnd'][:, whichtheta[0]], maxlags = lags)
+            else:
+                for t in whichtheta:
+                    axs[t].acorr(self.cal.info['thetarnd'][:, whichtheta[t]], maxlags = lags)
             plt.show()
         
         def predictintvr(self,x_std, xrep, y, **kwargs):
@@ -522,7 +534,8 @@ class thetadist(object):
             whichtheta = range(np.shape(rndm_m)[1])
             if kwargs:
                 for key in kwargs:
-                    key = kwargs[key]
+                    if key == 'whichtheta':
+                        whichtheta = kwargs[key]
             fig, axs = plt.subplots(1, len(whichtheta))
                 
             post = self.cal.predict(x_std)
@@ -550,13 +563,23 @@ class thetadist(object):
             length_w = len(whichtheta)
             length_m = len(method)
             
-            fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 6,length_m * 3))
             
             if kwargs:
                 for key in kwargs:
-                    key = kwargs[key]
-            if subplot == "transpose":
-                fig, axs = plt.subplots(length_m, length_w, figsize=(length_m * 6,length_w * 6))
+                    if key == 'whichtheta':
+                        whichtheta = kwargs[key]
+                        length_w = len(whichtheta)
+                        fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 6,length_m * 3))
+                        
+                    if key == 'subplot':
+                        subplot = kwargs[key] 
+                        if subplot == "transpose":
+                            fig, axs = plt.subplots(length_m, length_w, figsize=(length_m * 6,length_w * 6))
+                            
+                    if key == 'axs':
+                        fig, axs = kwargs[key]
+            else:
+                fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 6,length_m * 3))
             
                 
             if length_w == 1 or length_m == 1:
