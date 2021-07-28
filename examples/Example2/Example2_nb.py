@@ -27,6 +27,7 @@ import scipy.stats as sps
 import matplotlib.pyplot as plt 
 from surmise.emulation import emulator
 from surmise.calibration import calibrator
+from surmise.plot import plotting
 
 import pyximport
 pyximport.install(setup_args={"include_dirs":np.get_include()},
