@@ -38,8 +38,9 @@ class plotting:
                 axs[t].acorr(self.cal.info['thetarnd'][:, whichtheta[t]], maxlags = lags)
         plt.show()
     
-    def predictintvr(self,x_std, xrep, y, **kwargs):
+    def predictintvr(self,x, y, xscale = None, alpha = 0.5,  **kwargs):
 
+        import matplotlib.pyplot as plt
         rndm_m = self.cal.info['thetarnd']
         whichtheta = range(np.shape(rndm_m)[1])
         if kwargs:
@@ -47,16 +48,24 @@ class plotting:
                 if key == 'whichtheta':
                     whichtheta = kwargs[key]
         fig, axs = plt.subplots(1, len(whichtheta))
-            
-        post = self.cal.predict(x_std)
+                
+        post = self.cal.predict()
         rndm_m = post.rnd(s = 1000)
-        upper = np.percentile(rndm_m, 97.5, axis = 0)
-        lower = np.percentile(rndm_m, 2.5, axis = 0)
+            
+        upper = np.percentile(rndm_m, 100 - alpha/2, axis = 0)
+        lower = np.percentile(rndm_m, alpha/2, axis = 0)
         median = np.percentile(rndm_m, 50, axis = 0)
-        
-        axs.plot(xrep[0:21].reshape(21), median, color = 'black')
-        axs.fill_between(xrep[0:21].reshape(21), lower, upper, color = 'grey')
-        axs.plot(xrep, y, 'ro', markersize = 5, color='red')
+            
+        if xscale == None:
+            axs.plot(x, median, color = 'black')
+            axs.fill_between(x, lower, upper, color = 'grey')
+            axs.plot(x, y, 'ro', markersize = 5, color='red')
+                
+        else:
+            axs.plot(xscale, median, color = 'black')
+            axs.fill_between(xscale, lower, upper, color = 'grey')
+            axs.plot(xscale, y, 'ro', markersize = 5, color='red')
+
 
         
     def plot(self, method = ['histogram','boxplot','density'], **kwargs):
@@ -181,7 +190,30 @@ class plotting:
                         
         plt.show()
     
-
+class diagnostics:
+        def __init__(self, cal):
+            self.cal = cal
+        def score(self, y, alpha):
+             data = self.cal.info['thetarnd']
+             no_of_rows = np.shape(data)[0]
+             no_of_columns = np.shape(data)[1]
+             max_array = [[0 for col in range(no_of_columns)] for row in range(no_of_rows)]
+             
+             for i in range(no_of_rows):
+                 maxi = 0
+                 for j in range(no_of_columns):
+                     if data[i][j] > maxi:
+                         maxi = data[i][j]
+                         max_array[i][j] = data[i][j]
+                 
+             upper = np.percentile(data, 100 - alpha/2, axis = 0)
+             lower = np.percentile(data, alpha/2, axis = 0)
+             
+             score = -(upper - lower) - (2/alpha)*(lower - max_array) - (2/alpha)[max_array - upper]
+             
+             return score
+            
+    
     
 
 

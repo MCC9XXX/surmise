@@ -246,6 +246,7 @@ plot_theta(cal_grav_2, 0)
 plot_theta(cal_grav_3, 0)
 plot_theta(cal_grav_4, 0)
 '''
+
 cal_grav_1.theta.plots.plot(['boxplot', 'histogram'], whichtheta = [0])
 cal_grav_2.theta.plots.plot(['boxplot', 'histogram'], whichtheta = [0])
 cal_grav_3.theta.plots.plot(['boxplot', 'histogram'], whichtheta = [0])
