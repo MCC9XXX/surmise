@@ -25,8 +25,8 @@ class plotting:
             for key in kwargs:
                 if key == 'whichtheta':
                     whichtheta = kwargs[key]
-                    for x in whichtheta:
-                        if x > np.shape(theta):
+                    for x in range(len(whichtheta)):
+                        if int(whichtheta[x]) > int(theta.shape[1]):
                             raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
         fig, axs = plt.subplots(1, len(whichtheta))
         
@@ -64,8 +64,8 @@ class plotting:
             for key in kwargs:
                 if key == 'whichtheta':
                     whichtheta = kwargs[key]
-                    for x in whichtheta:
-                        if x > np.shape(theta):
+                    for x in range(len(whichtheta)):
+                        if int(whichtheta[x]) > int(theta.shape[1]):
                             raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
                     
         fig, axs = plt.subplots(1, len(whichtheta))
@@ -107,8 +107,8 @@ class plotting:
             for key in kwargs:
                 if key == 'whichtheta':
                     whichtheta = kwargs[key]
-                    for x in whichtheta:
-                        if x > np.shape(rndm_m):
+                    for x in range(len(whichtheta)):
+                        if int(whichtheta[x]) > int(rndm_m.shape[1]):
                             raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
         fig, axs = plt.subplots(1, len(whichtheta))
                 
@@ -146,7 +146,7 @@ class plotting:
         '''
          
         cal_theta = self.cal.info['thetarnd']
-        whichtheta = range(len(cal_theta[0]))
+        whichtheta = range(len(cal_theta[1]))
         length_w = len(whichtheta)
         length_m = len(method)
         
@@ -156,28 +156,38 @@ class plotting:
                 if key == 'whichtheta':
                     whichtheta = kwargs.get("whichtheta")
                     length_w = len(whichtheta)
-                    for x in whichtheta:
-                        if x > np.shape(cal_theta):
+                    for x in range(len(whichtheta)):
+                        if int(whichtheta[x]) > int(cal_theta.shape[1]):
                             raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
-                    
-
+                
                 if key == 'axs':
-                    temp_axs = kwargs.get("axs")
-                    length_w = np.shape(temp_axs)[0]
-                    if np.shape(temp_axs)[1] is not None:
-                        length_m = np.shape(temp_axs)[1]
-                        
-        
-                    
-        fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 6,length_m * 3))
-        
-        if kwargs:
-            for key, value in kwargs.items():
+                    axs = kwargs.get('axs')
+                
                 if key == 'fig':
                     fig = kwargs.get("fig")
+                    
+            if 'axs' or 'fig' not in kwargs:
+                fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 6,length_m * 3))
+                
+                    
+                        
+
+             #   if key == 'axs':
+              #      temp_axs = kwargs.get("axs")
+               #     length_w = np.shape(temp_axs)[0]
+                ##       length_m = np.shape(temp_axs)[1]
+                  #  else:
+                   #     length_m = 1
+    
+        
+        else:
+            fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 6,length_m * 3))
+        
+
+                    
         
             
-        if length_w == 1 or length_m == 1:
+        if (length_w == 1) != (length_m == 1):
             length = length_m*length_w-1
             cc = 0;
             while cc <= length:
@@ -209,6 +219,33 @@ class plotting:
                             lab_x = "$\\theta_{}$".format(whichtheta[s]) 
                             axs[cc].set_xlabel(lab_x, fontsize = 12)
                             cc += 1
+                            
+        elif length_w == 1 and length_m == 1:
+             if method[0] == 'histogram':
+                axs.hist(cal_theta[:, whichtheta[0]])
+                
+                lab_x = "$\\theta_{}$".format(whichtheta[0]) 
+                axs.set_xlabel(lab_x, fontsize = 12)
+                
+             elif method[0] == 'boxplot':
+                  axs.boxplot(cal_theta[:, whichtheta[0]])
+                            
+                  lab_x = "$\\theta_{}$".format(whichtheta[0]) 
+                  axs.set_xlabel(lab_x, fontsize = 12)
+            
+             elif method[0] == 'density':
+                 density = gaussian_kde(cal_theta[:, whichtheta[0]])
+                            
+                 ll = min(cal_theta[whichtheta[0]]) * 0.9
+                 ul = max(cal_theta[whichtheta[0]]) * 1.1
+                 z = np.linspace(ll,ul)
+                 density.covariance_factor = lambda : .5
+                 density._compute_covariance()
+                 axs.plot(z, density(z))
+                            
+                 lab_x = "$\\theta_{}$".format(whichtheta[0]) 
+                 axs.set_xlabel(lab_x, fontsize = 12)
+                  
                         
         elif length_w > length_m:
             for ii in range(len(method)):
