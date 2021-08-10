@@ -64,6 +64,9 @@ class plotting:
             for key in kwargs:
                 if key == 'whichtheta':
                     whichtheta = kwargs[key]
+                    for x in range(len(whichtheta)):
+                        if int(whichtheta[x]) > int(theta.shape[1]):
+                            raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
         fig, axs = plt.subplots(1, len(whichtheta))
         if len(whichtheta) == 1:
             axs.acorr(self.cal.info['thetarnd'][:, whichtheta[0]], maxlags = lags)
@@ -103,6 +106,9 @@ class plotting:
             for key in kwargs:
                 if key == 'whichtheta':
                     whichtheta = kwargs[key]
+                    for x in range(len(whichtheta)):
+                        if int(whichtheta[x]) > int(rndm_m.shape[1]):
+                            raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
         fig, axs = plt.subplots(1, len(whichtheta))
                 
         post = self.cal.predict()
@@ -150,15 +156,21 @@ class plotting:
                 if key == 'whichtheta':
                     whichtheta = kwargs.get("whichtheta")
                     length_w = len(whichtheta)
-                    fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 6,length_m * 3))
-                    
-                if key == 'subplot':
-                    subplot = kwargs[key] 
-                    if subplot == "transpose":
-                        fig, axs = plt.subplots(length_m, length_w, figsize=(length_m * 6,length_w * 6))
+                    for x in range(len(whichtheta)):
+                        if int(whichtheta[x]) > int(cal_theta.shape[1]):
+                            raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
                         
                 if key == 'axs':
-                    fig, axs = kwargs[key]
+                    axs = kwargs.get('acs')
+                    
+                if key == 'fig':
+                    fig = kwargs.get('fig')
+                    
+            if 'axs' or 'fig' not in kwargs:
+                fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 6,length_m * 3))
+                
+                    
+                    
         else:
             fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 6,length_m * 3))
         
@@ -195,20 +207,46 @@ class plotting:
                             lab_x = "$\\theta_{}$".format(whichtheta[s]) 
                             axs[cc].set_xlabel(lab_x, fontsize = 12)
                             cc += 1
+                            
+        elif length_w == 1 and length_m == 1:
+            if method[0] == 'histogram':
+                axs.hit[cal_theta[:,whichtheta[0]]]
                 
-        elif subplot == "transpose":
+                lab_x = "$\\theta_{}$".format(whichtheta[0]) 
+                axs.set_xlabel(lab_x, fontsize = 12)
+                            
+            elif method[0] == 'boxplot':
+                axs.boxplot(cal_theta[:, whichtheta[0]])
+                            
+                lab_x = "$\\theta_{}$".format(whichtheta[0]) 
+                axs.set_xlabel(lab_x, fontsize = 12)
+                            
+            elif method[0] == 'density':
+                density = gaussian_kde(cal_theta[:, whichtheta[0]])
+                            
+                ll = min(cal_theta[whichtheta[0]]) * 0.9
+                ul = max(cal_theta[whichtheta[0]]) * 1.1
+                z = np.linspace(ll,ul)
+                density.covariance_factor = lambda : .5
+                density._compute_covariance()
+                axs.plot(z, density(z))
+                            
+                lab_x = "$\\theta_{}$".format(whichtheta[0]) 
+                axs.set_xlabel(lab_x, fontsize = 12)
+                
+        elif length_w > length_m:
             for ii in range(length_m):
                 for i in range(length_w):
                     if method[ii] == 'histogram':
                         axs[ii, i].hist(cal_theta[:, whichtheta[i]])
                         
-                        lab_x = "$\\theta_{}$".format(i) 
+                        lab_x = "$\\theta_{}$".format(whichtheta[i]) 
                         axs[ii,i].set_xlabel(lab_x, fontsize = 12)
                         
                     elif method[ii] == 'boxplot':
                         axs[ii, i].boxplot(cal_theta[:,whichtheta[i]])
                         
-                        lab_x = "$\\theta_{}$".format(i) 
+                        lab_x = "$\\theta_{}$".format(whichtheta[i]) 
                         axs[ii,i].set_xlabel(lab_x, fontsize = 12)
                         
                     elif method[ii] == 'density':
@@ -221,7 +259,7 @@ class plotting:
                         density.covariance_factor = lambda : .5
                         density._compute_covariance()
                         axs[ii,i].plot(z, density(z))
-                        lab_x = "$\\theta_{}$".format(i) 
+                        lab_x = "$\\theta_{}$".format(whichtheta[i]) 
                         axs[ii,i].set_xlabel(lab_x, fontsize = 12)
                         
         else:
