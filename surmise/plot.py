@@ -30,18 +30,25 @@ class plotting:
                             raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
         fig, axs = plt.subplots(1, len(whichtheta))
         
-        
         if len(whichtheta) == 1:
             axs.plot(theta[:, whichtheta])
             lab_x = "$\\theta_{}$".format(whichtheta[0]) 
             axs.set_xlabel(lab_x, fontsize = 12)
             axs.set_xticks(np.arange(0, len(theta)+1, len(theta)*0.25))
+            x_left, x_right = axs.get_xlim()
+            y_low, y_high = axs.get_ylim()
+            axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+            
         else:
             for t in whichtheta:
                 axs[t].plot(self.cal.info['thetarnd'][:, whichtheta[t]])
                 lab_x = "$\\theta_{}$".format(whichtheta[t]) 
                 axs[t].set_xlabel(lab_x, fontsize = 12)
                 axs[t].set_xticks(np.arange(0, len(theta)+1, len(theta)*0.25))
+                x_left, x_right = axs[t].get_xlim()
+                y_low, y_high = axs[t].get_ylim()
+                axs[t].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                
                 
         plt.show()
     
@@ -169,12 +176,12 @@ class plotting:
                     fig = kwargs.get('fig')
                     
             if 'axs' or 'fig' not in kwargs:
-                fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 6,length_m * 3))
+                fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 12 ,length_m * 6 ))
                 
                     
                     
         else:
-            fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 6,length_m * 3))
+            fig, axs = plt.subplots(length_w, length_m, figsize=(length_w * 10 ,length_m * 2 ))
         
             
         if (length_w == 1) != (length_m == 1):
@@ -189,12 +196,23 @@ class plotting:
                             lab_x = "$\\theta_{}$".format(whichtheta[s]) 
                             axs[cc].set_xlabel(lab_x, fontsize = 12)
                             axs[cc].set_xticks(np.arange(min(cal_theta[:, whichtheta[s]])*0.95, max(cal_theta[:, whichtheta[s]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
+                            
+                            x_left, x_right = axs[cc].get_xlim()
+                            y_low, y_high = axs[cc].get_ylim()
+                            axs[cc].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                            
                             cc += 1
                         elif method[ss] == 'boxplot':
                             axs[cc].boxplot(cal_theta[:, whichtheta[s]])
                             
                             lab_x = "$\\theta_{}$".format(whichtheta[s]) 
                             axs[cc].set_xlabel(lab_x, fontsize = 12)
+                            
+                            x_left, x_right = axs[cc].get_xlim()
+                            y_low, y_high = axs[cc].get_ylim()
+                            axs[cc].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                            axs[cc].set_yticks(np.arange(min(cal_theta[:, whichtheta[s]])*0.95, max(cal_theta[:, whichtheta[s]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
+                            
                             cc += 1
                             
                         elif method[ss] == 'density':
@@ -209,6 +227,11 @@ class plotting:
                             
                             lab_x = "$\\theta_{}$".format(whichtheta[s]) 
                             axs[cc].set_xlabel(lab_x, fontsize = 12)
+                            
+                            x_left, x_right = axs[cc].get_xlim()
+                            y_low, y_high = axs[cc].get_ylim()
+                            axs[cc].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                            
                             cc += 1
                             
         elif length_w == 1 and length_m == 1:
@@ -218,12 +241,20 @@ class plotting:
                 lab_x = "$\\theta_{}$".format(whichtheta[0]) 
                 axs.set_xlabel(lab_x, fontsize = 12)
                 axs.set_xticks(np.arange(min(cal_theta[:, whichtheta[s]])*0.95, max(cal_theta[:, whichtheta[s]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
-                            
+                
+                x_left, x_right = axs.get_xlim()
+                y_low, y_high = axs.get_ylim()
+                axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                
             elif method[0] == 'boxplot':
                 axs.boxplot(cal_theta[:, whichtheta[0]])
                             
                 lab_x = "$\\theta_{}$".format(whichtheta[0]) 
                 axs.set_xlabel(lab_x, fontsize = 12)
+                
+                x_left, x_right = axs.get_xlim()
+                y_low, y_high = axs.get_ylim()
+                axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                             
             elif method[0] == 'density':
                 density = gaussian_kde(cal_theta[:, whichtheta[0]])
@@ -237,6 +268,10 @@ class plotting:
                             
                 lab_x = "$\\theta_{}$".format(whichtheta[0]) 
                 axs.set_xlabel(lab_x, fontsize = 12)
+                
+                x_left, x_right = axs.get_xlim()
+                y_low, y_high = axs.get_ylim()
+                axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                
                 
         elif length_w > length_m:
@@ -249,12 +284,18 @@ class plotting:
                         axs[ii,i].set_xlabel(lab_x, fontsize = 12)
                         axs[ii,i].set_xticks(np.arange(min(cal_theta[:, whichtheta[s]])*0.95, max(cal_theta[:, whichtheta[s]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
                         
-                        
+                        x_left, x_right = axs[ii,i].get_xlim()
+                        y_low, y_high = axs[ii,i].get_ylim()
+                        axs[ii,i].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                     elif method[ii] == 'boxplot':
                         axs[ii, i].boxplot(cal_theta[:,whichtheta[i]])
                         
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
                         axs[ii,i].set_xlabel(lab_x, fontsize = 12)
+                        
+                        x_left, x_right = axs[ii,i].get_xlim()
+                        y_low, y_high = axs[ii,i].get_ylim()
+                        axs[ii,i].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                         
                     elif method[ii] == 'density':
                         density = gaussian_kde(cal_theta[:, whichtheta[i]])
@@ -268,6 +309,10 @@ class plotting:
                         axs[ii,i].plot(z, density(z))
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
                         axs[ii,i].set_xlabel(lab_x, fontsize = 12)
+                        
+                        x_left, x_right = axs[ii,i].get_xlim()
+                        y_low, y_high = axs[ii,i].get_ylim()
+                        axs[ii,i].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                        
         else:
             for ii in range(len(method)):
@@ -277,15 +322,21 @@ class plotting:
                         
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
                         axs[i,ii].set_xlabel(lab_x, fontsize = 12)
-                        axs[i,ii].set_xticks(np.arange(min(cal_theta[:, whichtheta[s]])*0.95, max(cal_theta[:, whichtheta[s]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
+                        axs[i,ii].set_xticks(np.arange(min(cal_theta[:, whichtheta[i]])*0.95, max(cal_theta[:, whichtheta[i]])*1.05, (max(cal_theta[:, whichtheta[i]])-min(cal_theta[:, whichtheta[i]]))*0.2))
                         
-                        
+                        x_left, x_right = axs[i,ii].get_xlim()
+                        y_low, y_high = axs[i,ii].get_ylim()
+                        axs[i,ii].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                       
                     elif method[ii] == 'boxplot':
                         axs[i,ii].boxplot(cal_theta[:, whichtheta[i]])
                         
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
                         axs[i,ii].set_xlabel(lab_x, fontsize = 12)
+                        
+                        x_left, x_right = axs[i,ii].get_xlim()
+                        y_low, y_high = axs[i,ii].get_ylim()
+                        axs[i,ii].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                         
                     elif method[ii] == 'density':
                         density = gaussian_kde(cal_theta[:, whichtheta[i]])
@@ -301,6 +352,10 @@ class plotting:
                         
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
                         axs[i,ii].set_xlabel(lab_x, fontsize = 12)
+                        
+                        x_left, x_right = axs[i,ii].get_xlim()
+                        y_low, y_high = axs[i,ii].get_ylim()
+                        axs[i,ii].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                         
         plt.show()
     
@@ -342,6 +397,49 @@ class diagnostics:
              
             score = -(upper - lower) - (2/alpha)*(lower - max_array) - (2/alpha)[max_array - upper]
              
+            return score
+
+        def rmse(cal):
+            """Return the root mean squared error between the data and the mean of the calibrator."""
+            ypred = cal.predict().mean()
+        
+            error = np.sqrt(np.mean((ypred - cal.y)**2))
+            return error
+        
+        
+        def energyScore(cal):
+            """Return the empirical energy score between the data and the predictive distribution. """
+            S = 1000
+            ydist = cal.predict().rnd(S)  # shape = (num of samples, dimension of x)
+        
+            def norm(y1, y2):
+                return np.sqrt(np.sum((y1 - y2)**2))
+        
+            lin_part = np.array([norm(ydist[i], cal.y) for i in range(S)]).mean()
+            G = ydist @ ydist.T
+            D = np.diag(G) + np.diag(G).reshape(1000, 1) - 2*G
+            quad_part = -1/2 * np.mean(np.sqrt(D))
+        
+            score = lin_part + quad_part
+        
+            return score
+        
+        
+        def energyScore_naive(cal):
+            """Return the empirical energy score between the data and the predictive distribution. """
+            S = 1000
+            ydist = cal.predict().rnd(S)  # shape = (num of samples, dimension of x)
+        
+            def norm(y1, y2):
+                return np.sqrt(np.sum((y1 - y2)**2))
+        
+            lin_part = np.array([norm(ydist[i], cal.y) for i in range(S)]).mean()
+            quad_part = 0
+            for s in range(S):
+                quad_part += -1/2 * 1/S * np.array([norm(ydist[i], ydist[s]) for i in range(S)]).mean()
+        
+            score = lin_part + quad_part
+        
             return score
             
     

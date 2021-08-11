@@ -112,6 +112,7 @@ plot_cal.plot(['boxplot', 'histogram'], whichtheta = [0, 1])
 plot_cal.plot(['boxplot', 'histogram', 'density'], whichtheta = [0, 1])
 plot_cal.plot(['boxplot', 'histogram', 'density'])
 
+
 # Observe trace plots
 plot_cal.traceplot()
 plot_cal.traceplot(whichtheta = [1])
