@@ -32,14 +32,16 @@ class plotting:
         
         
         if len(whichtheta) == 1:
-            axs.plot(self.cal.info['thetarnd'][:, whichtheta])
+            axs.plot(theta[:, whichtheta])
             lab_x = "$\\theta_{}$".format(whichtheta[0]) 
             axs.set_xlabel(lab_x, fontsize = 12)
+            axs.set_xticks(np.arange(0, len(theta)+1, len(theta)*0.25))
         else:
             for t in whichtheta:
                 axs[t].plot(self.cal.info['thetarnd'][:, whichtheta[t]])
                 lab_x = "$\\theta_{}$".format(whichtheta[t]) 
                 axs[t].set_xlabel(lab_x, fontsize = 12)
+                axs[t].set_xticks(np.arange(0, len(theta)+1, len(theta)*0.25))
                 
         plt.show()
     
@@ -186,6 +188,7 @@ class plotting:
                             
                             lab_x = "$\\theta_{}$".format(whichtheta[s]) 
                             axs[cc].set_xlabel(lab_x, fontsize = 12)
+                            axs[cc].set_xticks(np.arange(min(cal_theta[:, whichtheta[s]])*0.95, max(cal_theta[:, whichtheta[s]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
                             cc += 1
                         elif method[ss] == 'boxplot':
                             axs[cc].boxplot(cal_theta[:, whichtheta[s]])
@@ -210,10 +213,11 @@ class plotting:
                             
         elif length_w == 1 and length_m == 1:
             if method[0] == 'histogram':
-                axs.hit[cal_theta[:,whichtheta[0]]]
+                axs.hist(cal_theta[:,whichtheta[0]])
                 
                 lab_x = "$\\theta_{}$".format(whichtheta[0]) 
                 axs.set_xlabel(lab_x, fontsize = 12)
+                axs.set_xticks(np.arange(min(cal_theta[:, whichtheta[s]])*0.95, max(cal_theta[:, whichtheta[s]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
                             
             elif method[0] == 'boxplot':
                 axs.boxplot(cal_theta[:, whichtheta[0]])
@@ -233,6 +237,7 @@ class plotting:
                             
                 lab_x = "$\\theta_{}$".format(whichtheta[0]) 
                 axs.set_xlabel(lab_x, fontsize = 12)
+               
                 
         elif length_w > length_m:
             for ii in range(length_m):
@@ -242,6 +247,8 @@ class plotting:
                         
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
                         axs[ii,i].set_xlabel(lab_x, fontsize = 12)
+                        axs[ii,i].set_xticks(np.arange(min(cal_theta[:, whichtheta[s]])*0.95, max(cal_theta[:, whichtheta[s]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
+                        
                         
                     elif method[ii] == 'boxplot':
                         axs[ii, i].boxplot(cal_theta[:,whichtheta[i]])
@@ -261,7 +268,7 @@ class plotting:
                         axs[ii,i].plot(z, density(z))
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
                         axs[ii,i].set_xlabel(lab_x, fontsize = 12)
-                        
+                       
         else:
             for ii in range(len(method)):
                 for i in range(len(whichtheta)):
@@ -270,6 +277,8 @@ class plotting:
                         
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
                         axs[i,ii].set_xlabel(lab_x, fontsize = 12)
+                        axs[i,ii].set_xticks(np.arange(min(cal_theta[:, whichtheta[s]])*0.95, max(cal_theta[:, whichtheta[s]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
+                        
                         
                       
                     elif method[ii] == 'boxplot':
