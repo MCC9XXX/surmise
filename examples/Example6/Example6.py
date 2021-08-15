@@ -4,6 +4,7 @@ import scipy.stats as sps
 from surmise.emulation import emulator
 from surmise.calibration import calibrator
 from surmise.plot import plotting
+from surmise.plot import diagnostics
 
 # 1D Example
 def model1(x, theta):
@@ -55,8 +56,7 @@ plot_cal_1.plot(['boxplot', 'histogram'], whichtheta = [0])
 plot_cal_1.plot(['density']) 
 plot_cal_1.traceplot()
 
-fig_1, axs_1 = plt.subplots(1,3)
-plot_cal_1.plot(['boxplot', 'histogram', 'density'], fig = fig_1, axs = axs_1)
+
 
 
 
@@ -116,7 +116,16 @@ plot_cal.plot(['boxplot', 'histogram', 'density'])
 # Observe trace plots
 plot_cal.traceplot()
 plot_cal.traceplot(whichtheta = [1])
+plot_cal.traceplot(whichtheta = [0])
 
 # Observe auto correlation plots
 plot_cal.autocorr(lags=5)
 plot_cal.autocorr(lags = 5, whichtheta = [1])
+
+# Observe Diagnostics
+plot_cal = diagnostics(cal_2)
+plot_cal.rmse()
+plot_cal.energyScore()
+plot_cal.energyScore_naive()
+
+
