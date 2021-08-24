@@ -28,31 +28,23 @@ class plotting:
                     for x in range(len(whichtheta)):
                         if int(whichtheta[x]) > int(theta.shape[1]):
                             raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
-        fig = plt.figure(constrained_layout = True)
-        ax = fig.add_gridspec(3, 3*len(whichtheta))
+        fig, axs = plt.subplots(1,len(whichtheta), figsize = (5,len(whichtheta)*5))
         
         if len(whichtheta) == 1:
-            axs = fig.add_subplot(ax[0:2,0:2])
             axs.plot(theta[:, whichtheta])
             lab_x = "$\\theta_{}$".format(whichtheta[0]) 
-            axs.set_xlabel(lab_x, fontsize = 12)
-            axs.set_xticks(np.arange(0, len(theta)+1, len(theta)*0.25))
-            axs.set_yticks(np.arange(min(theta[:, whichtheta[0]])*0.95, max(theta[:, whichtheta[0]])*1.05, (max(theta[:, whichtheta[0]])-min(theta[:, whichtheta[0]]))*0.2))
             x_left, x_right = axs.get_xlim()
             y_low, y_high = axs.get_ylim()
             axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
             
         else:
             for t in whichtheta:
-                axs1 = fig.add_subplot(ax[0:2,(2*t):2*(t+1)])
-                axs1.plot(self.cal.info['thetarnd'][:, whichtheta[t]])
+                axs[t].plot(self.cal.info['thetarnd'][:, whichtheta[t]])
                 lab_x = "$\\theta_{}$".format(whichtheta[t]) 
-                axs1.set_xlabel(lab_x, fontsize = 12)
-                axs1.set_xticks(np.arange(0, len(theta)+1, len(theta)*0.25))
-                axs1.set_yticks(np.arange(min(theta[:, whichtheta[t]])*0.95, max(theta[:, whichtheta[t]])*1.05, (max(theta[:, whichtheta[t]])-min(theta[:, whichtheta[t]]))*0.2))
-                x_left, x_right = axs1.get_xlim()
-                y_low, y_high = axs1.get_ylim()
-                axs1.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                axs[t].set_xlabel(lab_x, fontsize = 12)
+                x_left, x_right = axs[t].get_xlim()
+                y_low, y_high = axs[t].get_ylim()
+                axs[t].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                 
                 
         plt.show()
@@ -81,7 +73,7 @@ class plotting:
                     for x in range(len(whichtheta)):
                         if int(whichtheta[x]) > int(theta.shape[1]):
                             raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
-        fig, axs = plt.subplots(1, len(whichtheta))
+        fig, axs = plt.subplots(1, len(whichtheta), figsize = (3, len(whichtheta)*3))
         if len(whichtheta) == 1:
             axs.acorr(self.cal.info['thetarnd'][:, whichtheta[0]], maxlags = lags)
             lab_x = "$\\theta_{}$".format(whichtheta[0]) 
@@ -141,6 +133,53 @@ class plotting:
             axs.plot(xscale, median, color = 'black')
             axs.fill_between(xscale, lower, upper, color = 'grey')
             axs.plot(xscale, y, 'ro', markersize = 5, color='red')
+            
+    def histogram(self, **kwargs):
+        cal_theta = self.cal.info['thetarnd']
+        whichtheta = range(len(cal_theta[0]))
+        length_w = len(whichtheta)
+        
+        if kwargs:
+            for key, value in kwargs.items():
+                if key == 'whichtheta':
+                    whichtheta = kwargs.get("whichtheta")
+                    length_w = len(whichtheta)
+                    for x in range(len(whichtheta)):
+                        if int(whichtheta[x]) > int(cal_theta.shape[1]):
+                            raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
+                    
+                if key == 'fig':
+                    fig = kwargs.get('fig')
+                    
+            if 'fig' not in kwargs:
+               fig, axs = plt.subplots(1, length_w, figsize = (5,5*length_w) )
+                
+                    
+                    
+        else:
+            fig, axs = plt.subplots(1, length_w, figsize = (5,5*length_w)) 
+                                    
+        if length_w == 1:
+            axs.hist(cal_theta[:,whichtheta[0]])
+                
+            lab_x = "$\\theta_{}$".format(whichtheta[0]) 
+            axs.set_xlabel(lab_x, fontsize = 12)
+                
+            x_left, x_right = axs.get_xlim()
+            y_low, y_high = axs.get_ylim()
+            axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+            
+        else:
+            for t in len(length_w):
+                axs.hist(cal_theta[:,whichtheta[0]])
+                
+                lab_x = "$\\theta_{}$".format(whichtheta[0]) 
+                axs.set_xlabel(lab_x, fontsize = 12)
+                
+                x_left, x_right = axs.get_xlim()
+                y_low, y_high = axs.get_ylim()
+                axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                
 
 
         
@@ -177,14 +216,12 @@ class plotting:
                     fig = kwargs.get('fig')
                     
             if 'fig' not in kwargs:
-                fig = plt.figure(constrained_layout = True)
-                ax = fig.add_gridspec(5*len(method), 4*len(whichtheta))
+               fig, axs = plt.subplots(length_m, length_w, figsize = (5*length_m,5*length_w) )
                 
                     
                     
         else:
-            fig = plt.figure(constrained_layout = True)
-            ax = fig.add_gridspec(4*len(method), 4*len(whichtheta))
+            fig, axs = plt.subplots(length_m, length_w, figsize = (5*length_m,5*length_w) )
         
             
         if (length_w == 1) != (length_m == 1):
@@ -194,34 +231,29 @@ class plotting:
                 for ss in range(length_m):
                     for s in range(length_w):
                         if method[ss] == 'histogram':
-                            axs = fig.add_subplot(ax[0:2,(2*s):2*(s+1)])
-                            axs.hist(cal_theta[:, whichtheta[s]])
+                            axs[cc].hist(cal_theta[:, whichtheta[s]])
                             
                             lab_x = "$\\theta_{}$".format(whichtheta[s]) 
-                            axs.set_xlabel(lab_x, fontsize = 12)
-                            axs.set_xticks(np.arange(min(cal_theta[:, whichtheta[s]])*0.95, max(cal_theta[:, whichtheta[s]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
+                            axs[cc].set_xlabel(lab_x, fontsize = 12)
                             
-                            x_left, x_right = axs.get_xlim()
-                            y_low, y_high = axs.get_ylim()
-                            axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                            x_left, x_right = axs[cc].get_xlim()
+                            y_low, y_high = axs[cc].get_ylim()
+                            axs[cc].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                             
                             cc += 1
                         elif method[ss] == 'boxplot':
-                            axs = fig.add_subplot(ax[0:2,(2*s):2*(s+1)])
-                            axs.boxplot(cal_theta[:, whichtheta[s]])
+                            axs[cc].boxplot(cal_theta[:, whichtheta[s]])
                             
                             lab_x = "$\\theta_{}$".format(whichtheta[s]) 
-                            axs.set_xlabel(lab_x, fontsize = 12)
+                            axs[cc].set_xlabel(lab_x, fontsize = 12)
                             
-                            x_left, x_right = axs.get_xlim()
-                            y_low, y_high = axs.get_ylim()
-                            axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
-                            axs.set_yticks(np.arange(min(cal_theta[:, whichtheta[s]])*0.95, max(cal_theta[:, whichtheta[s]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
-                            
+                            x_left, x_right = axs[cc].get_xlim()
+                            y_low, y_high = axs[cc].get_ylim()
+                            axs[cc].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                           
                             cc += 1
                             
                         elif method[ss] == 'density':
-                            axs = fig.add_subplot(ax[0:2,(2*s):2*(s+1)])
                             density = gaussian_kde(cal_theta[:, whichtheta[s]])
                             
                             ll = min(cal_theta[whichtheta[s]]) * 0.9
@@ -229,32 +261,29 @@ class plotting:
                             z = np.linspace(ll,ul)
                             density.covariance_factor = lambda : .5
                             density._compute_covariance()
-                            axs.plot(z, density(z))
+                            axs[cc].plot(z, density(z))
                             
                             lab_x = "$\\theta_{}$".format(whichtheta[s]) 
-                            axs.set_xlabel(lab_x, fontsize = 12)
+                            axs[cc].set_xlabel(lab_x, fontsize = 12)
                             
                             x_left, x_right = axs[cc].get_xlim()
                             y_low, y_high = axs[cc].get_ylim()
-                            axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                            axs[cc].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                             
                             cc += 1
                             
         elif length_w == 1 and length_m == 1:
             if method[0] == 'histogram':
-                axs = fig.add_subplot(ax[0:2,0:2])
                 axs.hist(cal_theta[:,whichtheta[0]])
                 
                 lab_x = "$\\theta_{}$".format(whichtheta[0]) 
                 axs.set_xlabel(lab_x, fontsize = 12)
-                axs.set_xticks(np.arange(min(cal_theta[:, whichtheta[0]])*0.95, max(cal_theta[:, whichtheta[0]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
                 
                 x_left, x_right = axs.get_xlim()
                 y_low, y_high = axs.get_ylim()
                 axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                 
             elif method[0] == 'boxplot':
-                axs = fig.add_subplot(ax[0:2,0:2])
                 axs.boxplot(cal_theta[:, whichtheta[0]])
                             
                 lab_x = "$\\theta_{}$".format(whichtheta[0]) 
@@ -265,7 +294,6 @@ class plotting:
                 axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                             
             elif method[0] == 'density':
-                axs = fig.add_subplot(ax[0:2,0:2])
                 density = gaussian_kde(cal_theta[:, whichtheta[0]])
                             
                 ll = min(cal_theta[whichtheta[0]]) * 0.9
@@ -287,29 +315,28 @@ class plotting:
             for ii in range(length_m):
                 for i in range(length_w):
                     if method[ii] == 'histogram':
-                        axs = fig.add_subplot(ax[(3*ii):3*(ii+1),(3*i):3*(i+1)])
-                        axs.hist(cal_theta[:, whichtheta[i]])
+                        axs[i,ii].hist(cal_theta[:, whichtheta[i]])
                         
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
-                        axs.set_xlabel(lab_x, fontsize = 12)
-                        axs.set_xticks(np.arange(min(cal_theta[:, whichtheta[s]])*0.95, max(cal_theta[:, whichtheta[s]])*1.05, (max(cal_theta[:, whichtheta[s]])-min(cal_theta[:, whichtheta[s]]))*0.2))
+                        axs[i,ii].set_xlabel(lab_x, fontsize = 12)
+                        
                         
                         x_left, x_right = axs.get_xlim()
                         y_low, y_high = axs.get_ylim()
-                        axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                        axs[i,ii].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                     elif method[ii] == 'boxplot':
-                        axs = fig.add_subplot(ax[(3*ii):3*(ii+1),(3*i):3*(i+1)])
-                        axs.boxplot(cal_theta[:,whichtheta[i]])
+
+                        axs[i,ii].boxplot(cal_theta[:,whichtheta[i]])
                         
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
-                        axs.set_xlabel(lab_x, fontsize = 12)
+                        axs[i,ii].set_xlabel(lab_x, fontsize = 12)
                         
-                        x_left, x_right = axs.get_xlim()
-                        y_low, y_high = axs.get_ylim()
-                        axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                        x_left, x_right = axs[i,ii].get_xlim()
+                        y_low, y_high = axs[i,ii].get_ylim()
+                        axs[i,ii].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                         
                     elif method[ii] == 'density':
-                        axs = fig.add_subplot(ax[(3*ii):3*(ii+1),(3*i):3*(i+1)])
+                        
                         density = gaussian_kde(cal_theta[:, whichtheta[i]])
                         
                         ll = min(cal_theta[:, whichtheta[i]]) * 0.9
@@ -318,41 +345,37 @@ class plotting:
                         z = np.linspace(ll, ul)
                         density.covariance_factor = lambda : .5
                         density._compute_covariance()
-                        axs.plot(z, density(z))
+                        axs[i,ii].plot(z, density(z))
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
-                        axs.set_xlabel(lab_x, fontsize = 12)
+                        axs[i,ii].set_xlabel(lab_x, fontsize = 12)
                         
-                        x_left, x_right = axs.get_xlim()
-                        y_low, y_high = axs.get_ylim()
-                        axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+                        x_left, x_right = axs[i,ii].get_xlim()
+                        y_low, y_high = axs[i,ii].get_ylim()
+                        axs[i,ii].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
                        
         else:
             for ii in range(len(method)):
                 for i in range(len(whichtheta)):
                     if method[ii] == 'histogram':
-                        axs = fig.add_subplot(ax[(3*i):3*(i+1),(3*ii):3*(ii+1)])
-                        axs.hist(cal_theta[:, whichtheta[i]])
+                        
+                        axs[ii,i].hist(cal_theta[:, whichtheta[i]])
                         
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
-                        axs.set_xlabel(lab_x, fontsize = 12)
-                        
-                        axs.set_xticks(np.arange(min(cal_theta[:, whichtheta[i]])*0.95, max(cal_theta[:, whichtheta[i]])*1.05, (max(cal_theta[:, whichtheta[i]])-min(cal_theta[:, whichtheta[i]]))*0.2))
-                        
+                        axs[ii,i].set_xlabel(lab_x, fontsize = 12)
                         
                         
                       
                     elif method[ii] == 'boxplot':
-                        axs = fig.add_subplot(ax[(3*i):3*(i+1),(3*ii):3*(ii+1)])
-                        axs.boxplot(cal_theta[:, whichtheta[i]])
+                        axs[ii,i].boxplot(cal_theta[:, whichtheta[i]])
                         
                         lab_x = "$\\theta_{}$".format(whichtheta[i])
-                        axs.set_xlabel(lab_x, fontsize = 12)
+                        axs[ii,i].set_xlabel(lab_x, fontsize = 12)
                         
                         
                        
                         
                     elif method[ii] == 'density':
-                        axs = fig.add_subplot(ax[(3*i):3*(i+1),(3*ii):3*(ii+1)])
+                        
                         density = gaussian_kde(cal_theta[:, whichtheta[i]])
                         
                         ll = min(cal_theta[:, whichtheta[i]]) * 0.9
@@ -362,12 +385,12 @@ class plotting:
                         
                         density.covariance_factor = lambda : .5
                         density._compute_covariance()
-                        axs.plot(z,density(z))
+                        axs[ii,i].plot(z,density(z))
                         
                         lab_x = "$\\theta_{}$".format(whichtheta[i]) 
                         
                         
-                        axs.set_xlabel(lab_x, fontsize = 12)
+                        axs[ii,i].set_xlabel(lab_x, fontsize = 12)
                         
                       
                         

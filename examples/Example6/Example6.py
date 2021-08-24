@@ -123,9 +123,9 @@ plot_cal.autocorr(lags=5)
 plot_cal.autocorr(lags = 5, whichtheta = [1])
 
 # Observe Diagnostics
-plot_cal = diagnostics(cal_2)
-plot_cal.rmse()
-plot_cal.energyScore()
-plot_cal.energyScore_naive()
+diag_cal = diagnostics(cal_2)
+diag_cal.rmse()
+diag_cal.energyScore()
+diag_cal.energyScore_naive()
 
 
