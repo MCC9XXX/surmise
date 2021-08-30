@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 import numpy as np
+import seaborn as sns
+import pandas as pd
 
 class plotting:
     def __init__(self, cal):
@@ -134,52 +136,41 @@ class plotting:
             axs.fill_between(xscale, lower, upper, color = 'grey')
             axs.plot(xscale, y, 'ro', markersize = 5, color='red')
             
-    def histogram(self, **kwargs):
+    def histogram(self, num_col = 1, num_rows = 1, figure_size = (10,10), whichtheta = None):
         cal_theta = self.cal.info['thetarnd']
-        whichtheta = range(len(cal_theta[0]))
-        length_w = len(whichtheta)
+        df = pd.DataFrame(cal_theta)
+        fig, axis = plt.subplots(num_col, num_rows, figsize = figure_size)
+        if whichtheta:
+            df.hist(column = whichtheta, ax = axis)
+        else:
+            df.hist(ax = axis)
+        plt.show()
         
-        if kwargs:
-            for key, value in kwargs.items():
-                if key == 'whichtheta':
-                    whichtheta = kwargs.get("whichtheta")
-                    length_w = len(whichtheta)
-                    for x in range(len(whichtheta)):
-                        if int(whichtheta[x]) > int(cal_theta.shape[1]):
-                            raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
-                    
-                if key == 'fig':
-                    fig = kwargs.get('fig')
-                    
-            if 'fig' not in kwargs:
-               fig, axs = plt.subplots(1, length_w, figsize = (5,5*length_w) )
-                
-                    
-                    
-        else:
-            fig, axs = plt.subplots(1, length_w, figsize = (5,5*length_w)) 
-                                    
-        if length_w == 1:
-            axs.hist(cal_theta[:,whichtheta[0]])
-                
-            lab_x = "$\\theta_{}$".format(whichtheta[0]) 
-            axs.set_xlabel(lab_x, fontsize = 12)
-                
-            x_left, x_right = axs.get_xlim()
-            y_low, y_high = axs.get_ylim()
-            axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
+    def boxplots(self, num_col = 1, num_rows = 1, figure_size = (10,10), whichtheta = None):
+        cal_theta = self.cal.info['thetarnd']
+        length_w = range(len(cal_theta[0]))
+        col_name = []
+        for i in length_w:
+            hold = "$\\col_{}$".format(i)
+            col_name.append(hold)
+        df = pd.DataFrame(cal_theta, columns = col_name)
             
+        fig, axis = plt.subplots(num_col, num_rows, figsize = figure_size)
+        if whichtheta:
+            df.boxplot(column = whichtheta, ax = axis)
         else:
-            for t in len(length_w):
-                axs.hist(cal_theta[:,whichtheta[0]])
-                
-                lab_x = "$\\theta_{}$".format(whichtheta[0]) 
-                axs.set_xlabel(lab_x, fontsize = 12)
-                
-                x_left, x_right = axs.get_xlim()
-                y_low, y_high = axs.get_ylim()
-                axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
-                
+            df.boxplot(by = col_name, ax = axis)
+        plt.show()
+        
+    def density(self, num_col = 1, num_rows = 1, figure_size = (10,10), whichtheta = None):
+        cal_theta = self.cal.info['thetarnd']
+        df = pd.DataFrame(cal_theta)
+        fig, axis = plt.subplots(num_col, num_rows, figsize = figure_size)
+        if whichtheta:
+            df.plot.kde(column = whichtheta, ax = axis)
+        else:
+            df.plot.kde(ax = axis)
+        plt.show()
 
 
         
