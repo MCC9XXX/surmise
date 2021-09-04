@@ -4,6 +4,10 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 
+def histogram(df, theta, axis):
+        df.hist(column = theta, ax = axis)
+
+
 class plotting:
     def __init__(self, cal):
         self.cal = cal
@@ -136,15 +140,6 @@ class plotting:
             axs.fill_between(xscale, lower, upper, color = 'grey')
             axs.plot(xscale, y, 'ro', markersize = 5, color='red')
             
-    def histogram(self, num_col = 1, num_rows = 1, figure_size = (10,10), whichtheta = None):
-        cal_theta = self.cal.info['thetarnd']
-        df = pd.DataFrame(cal_theta)
-        fig, axis = plt.subplots(num_col, num_rows, figsize = figure_size)
-        if whichtheta:
-            df.hist(column = whichtheta, ax = axis)
-        else:
-            df.hist(ax = axis)
-        plt.show()
         
     def boxplots(self, num_col = 1, num_rows = 1, figure_size = (10,10), whichtheta = None):
         cal_theta = self.cal.info['thetarnd']
@@ -159,7 +154,7 @@ class plotting:
         if whichtheta:
             df.boxplot(column = whichtheta, ax = axis)
         else:
-            df.boxplot(by = col_name, ax = axis)
+            df.boxplot(ax = axis)
         plt.show()
         
     def density(self, num_col = 1, num_rows = 1, figure_size = (10,10), whichtheta = None):
@@ -171,6 +166,40 @@ class plotting:
         else:
             df.plot.kde(ax = axis)
         plt.show()
+        
+    def main(self, method, cols, rows, fig_size, thetas):
+        cal_theta = self.cal.info['thetarnd']
+        df = pd.DataFrame(cal_theta)
+        if method == 'histogram':
+            method = histogram
+        fig, axis = plt.subplots(cols, rows, figsize = fig_size)
+        if (cols*rows) < len(thetas):
+            raise ValueError("You do not have enough subplots to graph all parameters")
+        if cols == 1 and rows == 1:
+            method(df, thetas[0], axis)
+            
+        elif (cols == 1) != (rows == 1) :
+            length = rows*cols-1
+            cc = 0;
+            while cc <= length:
+                for i in thetas:
+                    method(df, thetas[i], axis[cc])
+                    cc += 1
+        
+        else:
+            for i in range(cols):
+                ii = 0
+                while ii <= rows-1:
+                    for iii in thetas:
+                        method(df, thetas[iii], axis[i,ii])
+                        ii += 1
+                        
+        
+        
+            
+        
+        
+        
 
 
         

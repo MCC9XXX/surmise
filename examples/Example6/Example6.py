@@ -5,6 +5,8 @@ from surmise.emulation import emulator
 from surmise.calibration import calibrator
 from surmise.plot import plotting
 from surmise.plot import diagnostics
+import seaborn as sns
+import pandas as pd
 
 # 1D Example
 def model1(x, theta):
@@ -108,9 +110,13 @@ cal_2 = calibrator(emu=emu_2,
 
 # Observe posterior distribution
 plot_cal = plotting(cal_2)
+'''
 plot_cal.plot(['boxplot', 'histogram'], whichtheta = [0, 1])
 plot_cal.plot(['boxplot', 'histogram', 'density'], whichtheta = [0, 1])
 plot_cal.plot(['boxplot', 'histogram', 'density'])
+'''
+plot_cal.main('histogram',1,1,(10,10),[0])
+plot_cal.main('histogram',2,1,(10,10),[0,1])
 
 
 # Observe trace plots
