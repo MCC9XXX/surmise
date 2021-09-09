@@ -6,6 +6,12 @@ import pandas as pd
 
 def histogram(df, theta, axis):
         df.hist(column = theta, ax = axis)
+    
+def boxplot(df, theta, axis):
+    df.boxplot(column = theta, ax = axis)
+    
+def density(df, theta, axis):
+    axis = df[theta].plot.kde()
 
 
 class plotting:
@@ -141,21 +147,6 @@ class plotting:
             axs.plot(xscale, y, 'ro', markersize = 5, color='red')
             
         
-    def boxplots(self, num_col = 1, num_rows = 1, figure_size = (10,10), whichtheta = None):
-        cal_theta = self.cal.info['thetarnd']
-        length_w = range(len(cal_theta[0]))
-        col_name = []
-        for i in length_w:
-            hold = "$\\col_{}$".format(i)
-            col_name.append(hold)
-        df = pd.DataFrame(cal_theta, columns = col_name)
-            
-        fig, axis = plt.subplots(num_col, num_rows, figsize = figure_size)
-        if whichtheta:
-            df.boxplot(column = whichtheta, ax = axis)
-        else:
-            df.boxplot(ax = axis)
-        plt.show()
         
     def density(self, num_col = 1, num_rows = 1, figure_size = (10,10), whichtheta = None):
         cal_theta = self.cal.info['thetarnd']
@@ -172,6 +163,10 @@ class plotting:
         df = pd.DataFrame(cal_theta)
         if method == 'histogram':
             method = histogram
+        if method == 'boxplot':
+            method = boxplot
+        if method == 'density':
+            method = density
         fig, axis = plt.subplots(cols, rows, figsize = fig_size)
         if (cols*rows) < len(thetas):
             raise ValueError("You do not have enough subplots to graph all parameters")

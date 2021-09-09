@@ -117,6 +117,8 @@ plot_cal.plot(['boxplot', 'histogram', 'density'])
 '''
 plot_cal.main('histogram',1,1,(10,10),[0])
 plot_cal.main('histogram',2,1,(10,10),[0,1])
+plot_cal.main('boxplot',2,1,(10,10), [0,1])
+plot_cal.main('density',2,1,(10,10), [0,1])
 
 
 # Observe trace plots
