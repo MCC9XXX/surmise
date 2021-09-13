@@ -10,56 +10,14 @@ def histogram(df, theta, axis):
 def boxplot(df, theta, axis):
     df.boxplot(column = theta, ax = axis)
     
-def density(df, theta, axis):
-    axis = df[theta].plot.kde()
+def autocrol(df, theta, axis):
+    pd.plotting.autocorrelation_plot(df[theta], ax = axis)
 
 
 class plotting:
     def __init__(self, cal):
         self.cal = cal
 
-    def traceplot(self, **kwargs):
-        '''
-        Creates a traceplot given a calibrator.
-
-        Parameters
-        ----------
-        **kwargs : dict, optional
-            Optional dictionary containing options you would like to pass to
-            fit function. Can edit which theta's to show'
-
-
-        '''
-        
-        theta = self.cal.info['thetarnd']
-        whichtheta = range(np.shape(theta)[1])
-        if kwargs:
-            for key in kwargs:
-                if key == 'whichtheta':
-                    whichtheta = kwargs[key]
-                    for x in range(len(whichtheta)):
-                        if int(whichtheta[x]) > int(theta.shape[1]):
-                            raise ValueError('The theta you chose to observe is out of bounds of the chossen calibration')
-        fig, axs = plt.subplots(1,len(whichtheta), figsize = (5,len(whichtheta)*5))
-        
-        if len(whichtheta) == 1:
-            axs.plot(theta[:, whichtheta])
-            lab_x = "$\\theta_{}$".format(whichtheta[0]) 
-            x_left, x_right = axs.get_xlim()
-            y_low, y_high = axs.get_ylim()
-            axs.set_aspect(abs((x_right - x_left)/(y_low-y_high)))
-            
-        else:
-            for t in whichtheta:
-                axs[t].plot(self.cal.info['thetarnd'][:, whichtheta[t]])
-                lab_x = "$\\theta_{}$".format(whichtheta[t]) 
-                axs[t].set_xlabel(lab_x, fontsize = 12)
-                x_left, x_right = axs[t].get_xlim()
-                y_low, y_high = axs[t].get_ylim()
-                axs[t].set_aspect(abs((x_right - x_left)/(y_low-y_high)))
-                
-                
-        plt.show()
     
     def autocorr(self, lags, **kwargs):
         '''
@@ -148,48 +106,51 @@ class plotting:
             
         
         
-    def density(self, num_col = 1, num_rows = 1, figure_size = (10,10), whichtheta = None):
-        cal_theta = self.cal.info['thetarnd']
-        df = pd.DataFrame(cal_theta)
-        fig, axis = plt.subplots(num_col, num_rows, figsize = figure_size)
-        if whichtheta:
-            df.plot.kde(column = whichtheta, ax = axis)
-        else:
-            df.plot.kde(ax = axis)
-        plt.show()
         
     def main(self, method, cols, rows, fig_size, thetas):
         cal_theta = self.cal.info['thetarnd']
         df = pd.DataFrame(cal_theta)
-        if method == 'histogram':
-            method = histogram
-        if method == 'boxplot':
-            method = boxplot
-        if method == 'density':
-            method = density
-        fig, axis = plt.subplots(cols, rows, figsize = fig_size)
         if (cols*rows) < len(thetas):
             raise ValueError("You do not have enough subplots to graph all parameters")
-        if cols == 1 and rows == 1:
-            method(df, thetas[0], axis)
             
-        elif (cols == 1) != (rows == 1) :
-            length = rows*cols-1
-            cc = 0;
-            while cc <= length:
-                for i in thetas:
-                    method(df, thetas[i], axis[cc])
-                    cc += 1
-        
-        else:
-            for i in range(cols):
-                ii = 0
-                while ii <= rows-1:
-                    for iii in thetas:
-                        method(df, thetas[iii], axis[i,ii])
-                        ii += 1
-                        
-        
+            
+        if method == 'histogram' or method == 'boxplot' or method == 'auto':
+            fig, axis = plt.subplots(cols, rows, figsize = fig_size)
+            if method == 'histogram':
+                method = histogram
+            if method == 'boxplot':
+                method = boxplot
+            if method == 'autocorl':
+                method = autocrol 
+                
+            if cols == 1 and rows == 1:
+                method(df, thetas[0], axis)
+                plt.show()
+                
+            elif (cols == 1) != (rows == 1) :
+                length = rows*cols-1
+                cc = 0;
+                while cc <= length:
+                    for i in thetas:
+                        method(df, thetas[i], axis[cc])
+                        cc += 1
+                plt.show()
+            else:
+                for i in range(cols):
+                    ii = 0
+                    while ii <= rows-1:
+                        for iii in thetas:
+                            method(df, thetas[iii], axis[i,ii])
+                            ii += 1
+                plt.show()
+                
+        if method == 'density':
+            df.plot(kind = 'density', subplots = True, layout = (cols,rows), sharex = False, figsize = fig_size)
+            plt.show()
+            
+        if method == 'trace':
+            df.plot(kind = 'line', subplots = True, layout = (cols,rows), sharex = False, figsize = fig_size)
+            plt.show()
         
             
         

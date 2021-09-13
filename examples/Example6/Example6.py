@@ -53,10 +53,12 @@ cal_1 = calibrator(emu=emu_1,
                    yvar=obsvar1)
 
 # NOTE TO JUSTIN: Please include all kinds of things that we can do with your plotting module
+'''
 plot_cal_1 = plotting(cal_1)
 plot_cal_1.plot(['boxplot', 'histogram'], whichtheta = [0])
 plot_cal_1.plot(['density']) 
 plot_cal_1.traceplot()
+'''
 
 
 
@@ -119,9 +121,11 @@ plot_cal.main('histogram',1,1,(10,10),[0])
 plot_cal.main('histogram',2,1,(10,10),[0,1])
 plot_cal.main('boxplot',2,1,(10,10), [0,1])
 plot_cal.main('density',2,1,(10,10), [0,1])
+plot_cal.main('autocorl',1,1,(10,10),[1])
 
 
 # Observe trace plots
+'''
 plot_cal.traceplot()
 plot_cal.traceplot(whichtheta = [1])
 plot_cal.traceplot(whichtheta = [0])
@@ -129,7 +133,7 @@ plot_cal.traceplot(whichtheta = [0])
 # Observe auto correlation plots
 plot_cal.autocorr(lags=5)
 plot_cal.autocorr(lags = 5, whichtheta = [1])
-
+'''
 # Observe Diagnostics
 diag_cal = diagnostics(cal_2)
 diag_cal.rmse()
